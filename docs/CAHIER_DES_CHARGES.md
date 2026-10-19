@@ -54,3 +54,12 @@ Exécution isolée contrôlée avec délai, sortie plafonnée, répertoire tempo
 - Contrôles de fichiers, marqueurs, catalogues, images manquantes, langues, formats, métadonnées et dépendances.
 - Recherche des spécifications officielles au moment du contrôle; date et URL consignées.
 - Ne jamais prétendre à une acceptation de plateforme ou à une vérification non effectuée.
+
+
+## Brief éditorial détaillé obligatoire avant rédaction (version 1.1.0)
+- Chaque langue dispose de `chapter-briefs/INDEX.md` et d’un fichier par chapitre.
+- `/book-chapter-brief` prépare le contenu détaillé sans rédiger le chapitre final.
+- `/book-chapter-brief-edit` prend en charge ajout, correction, remplacement, déplacement, suppression et validation explicite.
+- Le brief couvre objectifs, prérequis, sous-sections, notions, explications, exemples, exercices avec énoncé complet, consignes, critères de réussite, corrigés attendus, illustrations, sources et transitions.
+- Le chapitre ne peut être rédigé que si le brief porte `APPROVED`. Les commandes de plage et de livre entier doivent bloquer ou signaler les chapitres non approuvés.
+- `scripts/chapter_briefs.py` permet l’initialisation d’un modèle, la liste des statuts et la validation structurelle; il refuse d’écraser un brief existant.

@@ -1,3 +1,12 @@
+# Journal des modifications
+
+## 1.1.0
+- Ajout des briefs détaillés de chapitres, générés avant la rédaction finale.
+- Ajout des commandes `/book-chapter-brief` et `/book-chapter-brief-edit` et de leurs variantes `scriptable-`.
+- Les commandes de rédaction d’un chapitre, d’une plage et du livre entier exigent désormais des briefs marqués `APPROVED`.
+- Ajout du modèle complet de brief et de `scripts/chapter_briefs.py` pour initialiser, lister et valider la structure sans écraser les fichiers existants.
+- Ajout de tests d’intégration pour les briefs et leur protection contre l’écrasement.
+
 # Changelog
 
 ## 1.0.0

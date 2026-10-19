@@ -125,6 +125,50 @@ class GeneratorTests(unittest.TestCase):
         self.assertEqual(cfg['publishing']['formats'],['pdf_print','kdp_print'])
         self.assertEqual(cfg['project_name'],'my-custom-folder')
 
+
+    def test_chapter_brief_workflow_is_generated_and_gates_drafting(self):
+        with tempfile.TemporaryDirectory() as td:
+            target=Path(td)/'book'; bookgen.build_project(self.config(td),target)
+            briefdir=target/'languages/fr-FR/chapter-briefs'
+            self.assertTrue((briefdir/'README.md').is_file())
+            self.assertTrue((briefdir/'INDEX.md').is_file())
+            self.assertTrue((target/'templates/chapters/CHAPTER_BRIEF_TEMPLATE.md').is_file())
+            create=(target/'.opencode/commands/book-chapter-brief.md').read_text(encoding='utf-8')
+            edit=(target/'.opencode/commands/book-chapter-brief-edit.md').read_text(encoding='utf-8')
+            chapter=(target/'.opencode/commands/book-chapter.md').read_text(encoding='utf-8')
+            self.assertIn('énoncé complet',create)
+            self.assertIn('supprimer',edit)
+            self.assertIn('APPROVED',chapter)
+            self.assertTrue((target/'.opencode/commands/scriptable-book-chapter-brief.md').is_file())
+            self.assertTrue((target/'.opencode/commands/scriptable-book-chapter-brief-edit.md').is_file())
+            self.assertIn('APPROVED', (target/'AGENTS.md').read_text(encoding='utf-8'))
+
+    def test_chapter_brief_helper_init_list_validate_and_no_overwrite(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as td:
+            target=Path(td)/'book'; bookgen.build_project(self.config(td),target)
+            helper=target/'scripts/chapter_briefs.py'
+            cp=subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','init','--chapter','CH001'],text=True,capture_output=True)
+            self.assertEqual(cp.returncode,0,cp.stdout+cp.stderr)
+            brief=target/'languages/fr-FR/chapter-briefs/CH001.md'
+            self.assertIn('Énoncé complet destiné au lecteur',brief.read_text(encoding='utf-8'))
+            cp2=subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','init','--chapter','CH001'],text=True,capture_output=True)
+            self.assertEqual(cp2.returncode,3)
+            cp3=subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','list'],text=True,capture_output=True)
+            self.assertEqual(cp3.returncode,0,cp3.stderr); self.assertIn('CH001',cp3.stdout); self.assertIn('DRAFT',cp3.stdout)
+            cp4=subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','validate'],text=True,capture_output=True)
+            self.assertEqual(cp4.returncode,0,cp4.stdout+cp4.stderr)
+
+
+    def test_validator_blocks_chapter_without_approved_brief(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as td:
+            target=Path(td)/'book'; bookgen.build_project(self.config(td),target)
+            (target/'languages/fr-FR/chapters/CH001.md').write_text('# Chapitre sans brief approuvé\n',encoding='utf-8')
+            cp=subprocess.run(['python3',str(target/'scripts/validate_project.py'),'--root',str(target)],text=True,capture_output=True)
+            self.assertEqual(cp.returncode,1,cp.stdout+cp.stderr)
+            self.assertIn('no detailed brief',cp.stdout)
+
     def test_language_catalogs_are_per_language(self):
         files=bookgen.make_language_files('es-ES',self.config('/tmp'),False)
         self.assertIn('languages/es-ES/illustrations/ILLUSTRATIONS.md',files)

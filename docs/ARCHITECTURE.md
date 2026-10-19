@@ -20,3 +20,7 @@ Les décisions sont conservées dans `docs/DECISIONS.md`, l'état dans `docs/PRO
 ## Limites
 
 Le générateur ne crée pas le contenu complet du livre à l'initialisation. OpenCode réalise les tâches éditoriales sur commande. Les images ne sont jamais générées. Les builds ne valident pas l'acceptation des plateformes. Les tests Windows nécessitent une exécution native Windows.
+
+
+## Planification détaillée des chapitres
+Le plan de haut niveau (`SUMMARY.md`) est distinct des briefs de chapitre (`languages/<lang>/chapter-briefs/CHxxx.md`), eux-mêmes distincts du texte final (`chapters/CHxxx.md`). Le brief doit être explicitement approuvé avant rédaction. La commande IA gère le contenu éditorial et les opérations d’édition; `scripts/chapter_briefs.py` réalise les opérations déterministes de création de modèle, de liste et de contrôle structurel.

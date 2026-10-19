@@ -1,10 +1,11 @@
 # OpenCode Book Project Generator
 
-**Version 1.0.0** · Générateur interactif multiplateforme pour créer un projet éditorial OpenCode complet, un livre par exécution.
+**Version 1.1.0** · Générateur interactif multiplateforme pour créer un projet éditorial OpenCode complet, un livre par exécution.
 
 ## Ce que le générateur produit
 
 - Configuration éditoriale et technique, décisions, glossaire, références, suivi de progression et prompts de travail.
+- Dossier de briefs détaillés par chapitre, avec objectifs, sous-sections, exemples, énoncés d’exercices, critères de réussite et corrigés attendus, avant la rédaction du chapitre.
 - Commandes OpenCode natives dans `.opencode/commands/` et versions `scriptable-` prévues pour être appelées par `opencode run`.
 - Scripts déterministes de validation, assemblage, état et compilation, ainsi qu'un exécuteur de code contrôlé.
 - Arborescence dédiée à chaque langue, catalogue d'illustrations et spécifications de couverture par format.
@@ -60,6 +61,17 @@ La configuration peut être exportée depuis un projet généré : `config/gener
 3. `/book-chapter CH001`, `/book-review CH001`, puis `/book-range CH002-CH005` ou `/book-all`.
 4. `/book-review-all`, `/book-assemble fr-FR`, `/book-cover-text`, `/book-cover`, `/book-check`.
 5. Scripts déterministes : `python scripts/validate_project.py --root .`, `python scripts/status.py --root .`, `python scripts/assemble.py --root . --lang fr-FR`, `python scripts/build.py --root . --lang fr-FR --format all`.
+
+## Planification détaillée des chapitres avant rédaction
+
+Chaque langue contient `languages/<lang>/chapter-briefs/`, avec un `INDEX.md` et un fichier Markdown par chapitre. Le modèle `templates/chapters/CHAPTER_BRIEF_TEMPLATE.md` couvre objectifs, prérequis, sections détaillées, notions à expliquer, exemples, sources à vérifier, illustrations et exercices avec énoncés complets, données, consignes, critères de réussite et corrigés attendus.
+
+- `/book-chapter-brief CH001` crée ou complète le plan détaillé, sans rédiger le chapitre final.
+- `/book-chapter-brief-edit CH001 ajouter un exercice ...` permet ajout, correction, remplacement, déplacement, suppression et validation. Les suppressions ou remplacements substantiels nécessitent confirmation s’ils ne sont pas explicitement demandés.
+- `/book-chapter CH001`, `/book-range` et `/book-all` sont instruits de ne pas rédiger un chapitre dont le brief n’existe pas ou n’est pas `APPROVED`.
+- L’outil déterministe `python scripts/chapter_briefs.py --root . --lang fr-FR --action list|validate` liste ou contrôle la structure des briefs. Pour créer un modèle : `python scripts/chapter_briefs.py --root . --lang fr-FR --action init --chapter CH001`. Il refuse d’écraser un brief existant.
+
+La validation automatique vérifie la structure, pas la qualité éditoriale ni l’accord humain.
 
 ## Nouvelle langue : préparation puis traduction explicite
 
