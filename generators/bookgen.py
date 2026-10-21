@@ -5,7 +5,7 @@ import argparse, json, os, re, shutil, subprocess, sys, textwrap, unicodedata
 from pathlib import Path
 from datetime import datetime, timezone
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 FORMATS = [
     ("pdf_print", "PDF impression uniquement"), ("pdf_print_screen", "PDF impression + écran"),
     ("kdp_print", "Amazon KDP broché uniquement"), ("kdp_ebook", "Amazon KDP broché + Kindle numérique"),
@@ -162,13 +162,14 @@ def command_body(name, description, task, lang):
 COMMANDS={
 "book-plan":("Planifier le livre", "Établis le plan complet, les objectifs, le public, la progression, les chapitres et l'estimation de volume. Mets à jour SUMMARY.md et l'état du projet. Ne rédige pas encore les chapitres."),
 "book-summary":("Créer ou réviser le sommaire", "Crée ou révise le sommaire détaillé, attribue un ID stable à chaque chapitre (CH001, CH002…), définit objectifs, dépendances, activités pédagogiques et annexes. Ne rédige pas les chapitres. Étape suivante obligatoire : produire et faire valider les briefs détaillés via /book-chapter-brief avant toute rédaction."),
-"book-chapter-brief":("Décrire en détail le contenu d'un chapitre avant rédaction", "Crée ou complète languages/<lang>/chapter-briefs/CHxxx.md sans rédiger le chapitre final. Décris objectifs, prérequis, concepts et sous-sections, explications attendues, exemples, pièges, sources à vérifier, transitions, illustrations et exercices avec énoncé complet, consignes, données, niveau, critères de réussite et corrigé attendu. Le statut initial est DRAFT; ne passe à APPROVED qu'après demande explicite de l'utilisateur. Mets à jour l'index et l'état."),
-"book-chapter-brief-edit":("Modifier les descriptions détaillées d'un chapitre", "Modifie le brief du chapitre ciblé. L'argument précise l'ID et l'opération : ajouter, corriger, remplacer, déplacer, supprimer un élément ou exercice, ou valider. Avant suppression ou remplacement substantiel, présente les éléments concernés et demande confirmation si l'utilisateur n'a pas explicitement autorisé l'opération. Mets à jour index, statut et décisions. Ne rédige pas le chapitre final."),
-"book-chapter":("Rédiger un chapitre", "Avant rédaction, vérifie que languages/<lang>/chapter-briefs/CHxxx.md existe et porte le statut APPROVED. Sinon, arrête-toi et demande /book-chapter-brief puis /book-chapter-brief-edit. Rédige uniquement à partir du brief approuvé, sans omettre concepts, exemples, exercices, énoncés ni corrections attendues. Vérifie prérequis, progression, faits, style et marqueurs d'illustration. Ne prétends pas avoir exécuté du code sans rapport d'exécution."),
-"book-range":("Rédiger une plage de chapitres", "Traite uniquement la plage indiquée. Avant rédaction, vérifie que chaque chapitre possède un brief détaillé APPROVED; liste les briefs manquants/non approuvés et arrête la plage plutôt que de rédiger sans plan validé. Respecte les dépendances et validations. N'écrase rien sans confirmation."),
-"book-all":("Produire tous les chapitres", "Exécute le workflow défini dans config/workflow.md. Étape préalable obligatoire : créer les briefs détaillés avec /book-chapter-brief et obtenir leur approbation. Ne rédige aucun chapitre sans brief APPROVED; liste les blocages. Suis le mode d'arrêt/reprise et consigne les résultats."),
-"book-review":("Relire un chapitre", "Relis le chapitre indiqué par rapport à son brief APPROVED et au sommaire : vérifie que chaque section, exemple, exercice, énoncé et correction attendue a été traité, en plus de l'exactitude, du style, des références, du code et des illustrations. Fournis un rapport actionnable et corrige uniquement si le mode de validation l'autorise."),
-"book-review-all":("Relire le livre entier", "Relis sommaire, briefs approuvés et chapitres ensemble. Détecte briefs absents, éléments prévus mais non rédigés, exercices/corrigés manquants, contradictions, répétitions, incohérences de niveau, termes non définis et références manquantes. Produit un rapport global."),
+"book-chapter-brief":("Créer un brief synthétique de chapitre", "Crée ou complète languages/<lang>/chapter-briefs/CHxxx.md comme plan éditorial intermédiaire, jamais comme mini-chapitre. Liste les points et sous-points à traiter avec une intention courte, sans rédiger les explications finales ni les paragraphes complets. Selon config/illustrations.md et la configuration éditoriale, prévois les illustrations, schémas et tableaux utiles avec ID et légende. Si des exercices sont prévus, donne leur énoncé destiné au lecteur, leur but, leurs consignes et critères, mais aucune correction ni solution. Le statut reste DRAFT jusqu'à approbation explicite. Mets à jour l'index et l'état."),
+"book-chapter-brief-edit":("Modifier le brief synthétique d'un chapitre", "Modifie le plan du chapitre sans rédiger son contenu final : ajouter/corriger/déplacer/supprimer un point, une illustration, un schéma, un tableau ou un exercice. Un exercice de brief contient son énoncé, son objectif et ses consignes, jamais sa correction. Avant suppression ou remplacement substantiel non explicitement demandé, demande confirmation. Une modification substantielle d'un brief APPROVED le remet en DRAFT. Ne rédige pas le chapitre."),
+"book-chapter-brief-validate":("Contrôler et approuver un brief", "Contrôle que le brief est synthétique, complet par rapport à la configuration et cohérent avec le sommaire; les points doivent être identifiés sans paragraphes finaux, les visuels prévus ont une légende, et les exercices ont un énoncé et un objectif sans corrigé. Présente les problèmes à corriger. Ne change le statut en APPROVED qu'après demande explicite de l'utilisateur."),
+"book-chapter":("Rédiger le chapitre final", "Avant rédaction, vérifie que le brief de languages/<lang>/chapter-briefs/CHxxx.md existe et porte APPROVED. Sinon, arrête-toi. Le brief est un plan synthétique, pas le texte à recopier. Développe chaque point en contenu final substantiel, structuré et rédigé dans la langue cible : paragraphes explicatifs complets, définitions, exemples concrets, transitions naturelles et profondeur adaptée au public et au type de livre. Pour les sujets techniques/scientifiques, ajoute si cela aide une analogie ou une explication pédagogique imagée signalée par l'icône dédié `💡 Explication imagée`. Insère les tableaux, schémas et illustrations planifiés, avec leurs légendes et marqueurs corrects. Pour chaque exercice, rédige l'énoncé et le but, sans correction dans le chapitre sauf si la configuration demande explicitement une correction inline; place les corrections selon config/workflow.md et config/editorial.md. N'utilise pas le brief comme substitut au chapitre. N'invente pas de sources ou de résultats d'exécution."),
+"book-range":("Rédiger une plage de chapitres", "Traite uniquement la plage indiquée. Vérifie que chaque chapitre possède un brief synthétique APPROVED; liste les manquants/non approuvés et bloque-les. Développe chaque point en texte final substantiel, dans la langue cible, selon la configuration; ne transforme pas les puces du brief en chapitre quasi vide. Respecte visuels, exercices sans corrigés inline sauf configuration contraire, dépendances et validations. N'écrase rien sans confirmation."),
+"book-all":("Produire tous les chapitres", "Exécute le workflow défini dans config/workflow.md. Les briefs synthétiques doivent être créés et approuvés au préalable. Pour chaque brief APPROVED, rédige un véritable chapitre final substantiel et structuré, développe chaque point avec explications, exemples et pédagogie adaptés, insère les visuels prévus et les exercices sans correction inline sauf configuration contraire. Ne rédige aucun chapitre sans brief APPROVED; liste les blocages et consigne les résultats."),
+"book-review":("Relire un chapitre", "Relis le chapitre par rapport à son brief synthétique APPROVED et au sommaire. Vérifie que chaque point est réellement développé en texte explicatif, et non laissé sous forme de puce/titre; vérifie profondeur adaptée, exemples, transitions, visuels légendés, exercices présents sans corrigé inline sauf configuration contraire, exactitude, style et références. Fournis un rapport actionnable et corrige uniquement si le mode l'autorise."),
+"book-review-all":("Relire le livre entier", "Relis sommaire, briefs synthétiques et chapitres ensemble. Détecte points non développés, chapitres trop courts ou vides, briefs absents, visuels/legendes manquants, exercices sans énoncé ou avec corrigé au mauvais endroit, contradictions, répétitions, incohérences de niveau et références manquantes. Produit un rapport global."),
 "book-status":("Afficher l'état du projet", "Inspecte l'état réel des fichiers, chapitres, validations, illustrations, traductions et livrables. Mets à jour docs/PROGRESS.md sans déclarer achevée une tâche non vérifiée."),
 "book-assemble":("Assembler le manuscrit", "Assemble les éléments validés dans languages/<lang>/manuscript/ en respectant SUMMARY.md, les marqueurs d'illustration et les options de mise en page. Signale les éléments manquants sans les masquer."),
 "book-cover-text":("Préparer les textes de couverture", "Rédige et vérifie le texte de première, quatrième de couverture et tranche si pertinente, selon le public, le format et les limites fournies. Ne prétends pas calculer la tranche sans pagination/papier/spécifications vérifiés."),
@@ -177,8 +178,8 @@ COMMANDS={
 "book-language-create":("Préparer une nouvelle langue", "Crée l'arborescence complète de la langue demandée, les fichiers de sommaire/chapitres/briefs détaillés/manuscrit/couvertures/sorties et un catalogue d'illustrations dédié. Ne traduis rien et ne lance aucune génération de contenu. Pour chaque illustration de la langue source, prépare une entrée dans le catalogue cible en conservant l'ID stable, réserve un chemin image distinct contenant le code langue cible et marque la traduction de légende/description/prompt comme à faire. Si une entrée est en mode image utilisateur, crée un PNG vide uniquement si le chemin cible n'existe pas et marque-le PLACEHOLDER_EMPTY. Aucun moteur d'images ne doit être lancé."),
 "book-translate":("Traduire un élément", "Traduis uniquement l'élément indiqué dans la langue cible. Respecte le glossaire, la voix, les références et les marqueurs. Pour les illustrations, traduis légendes, descriptions et prompts associés; conserve les ID stables mais réserve une image distincte pour la langue cible."),
 "book-translate-all":("Traduire tous les éléments", "Traduis tous les éléments existants vers la langue cible : sommaire, briefs détaillés des chapitres, chapitres, quatrième de couverture, catalogue d'illustrations, légendes, descriptions et prompts. Conserve les IDs d'illustration stables, mais utilise des chemins image propres à la langue cible; ne réutilise jamais l'image d'une autre langue. Vérifie l'exhaustivité et consigne chaque élément traduit/non traduit."),
-"book-translate-chapter-brief":("Traduire le brief détaillé d’un chapitre", "Traduis le fichier languages/<langue_source>/chapter-briefs/CHxxx.md vers la langue cible dans son dossier chapter-briefs. Conserve toutes les sections, IDs d’exercices, critères de réussite, corrigés attendus et marqueurs; adapte les exemples et références culturelles si nécessaire. Le statut de traduction reste IN_REVIEW jusqu’à validation."),
-"book-translate-chapter-briefs":("Traduire les briefs détaillés d’une plage ou de tous les chapitres", "Selon les arguments, traduis une plage de briefs ou tous les briefs existants vers la langue cible. Préserve la structure, les IDs, les exercices et les corrigés attendus. Ne rédige pas les chapitres finaux et ne marque pas les briefs comme APPROVED sans validation explicite."),
+"book-translate-chapter-brief":("Traduire le brief détaillé d’un chapitre", "Traduis le fichier languages/<langue_source>/chapter-briefs/CHxxx.md vers la langue cible dans son dossier chapter-briefs. Conserve les points, IDs d’exercices, énoncés, objectifs, légendes et marqueurs; n’ajoute aucun corrigé au brief; adapte les exemples et références culturelles si nécessaire. Le statut de traduction reste IN_REVIEW jusqu’à validation."),
+"book-translate-chapter-briefs":("Traduire les briefs détaillés d’une plage ou de tous les chapitres", "Selon les arguments, traduis une plage de briefs ou tous les briefs existants vers la langue cible. Préserve la structure, les IDs, les énoncés et les objectifs des exercices, sans ajouter de corrigés aux briefs. Ne rédige pas les chapitres finaux et ne marque pas les briefs comme APPROVED sans validation explicite."),
 "book-language-chapter":("Traduire un chapitre", "Traduis le chapitre indiqué vers la langue cible en conservant la structure, le sens, le niveau, les références, le code et les marqueurs d'illustration. Mets à jour l'état de traduction."),
 "book-language-range":("Traduire une plage de chapitres", "Traduis uniquement la plage de chapitres indiquée vers la langue cible. Préserve terminologie et cohérence inter-chapitres et consigne les erreurs."),
 "book-language-all":("Traduire les chapitres d'une langue", "Traduis les chapitres disponibles vers la langue cible selon le mode demandé. N'omets aucun chapitre; marque explicitement les éléments non traduits."),
@@ -202,7 +203,7 @@ Tu es l'assistant éditorial et technique du livre **{config['title']}** de {con
 5. Pour le code, utiliser uniquement l'exécuteur isolé `scripts/safe_exec.py`, qui impose un répertoire temporaire, un délai et une liste de langages autorisés. Si les contrôles d'isolation ne sont pas disponibles, ne pas exécuter.
 6. Les illustrations sont en préparation uniquement. Créer catalogues/prompts/chemins, jamais prétendre avoir généré une image.
 7. Chaque langue a ses propres images, fichiers et catalogue. Ne pas réutiliser une image d'une autre langue.
-8. Avant de rédiger un chapitre, vérifier `languages/<lang>/chapter-briefs/CHxxx.md`. Il doit exister et porter le statut `APPROVED`. Sinon, créer ou compléter le brief avec `/book-chapter-brief`, le faire corriger/valider avec `/book-chapter-brief-edit` et ne pas rédiger le chapitre avant approbation explicite.
+8. Le brief est un plan synthétique, jamais le chapitre. Il contient les points à traiter, les visuels avec légendes et les exercices avec énoncé/but sans corrigé. Avant rédaction, vérifier que `languages/<lang>/chapter-briefs/CHxxx.md` existe et porte `APPROVED`; sinon, arrêter. Le chapitre final doit développer chaque point en texte substantiel, dans la langue prévue, avec exemples et explications pédagogiques. Pour les explications imagées utiles, utiliser `💡 Explication imagée`.
 9. En mode recherche Web, enregistrer les sources dans `config/sources.md`, vérifier les faits importants, reformuler originalement et citer quand nécessaire.
 10. La qualité et l'exhaustivité priment sur le nombre exact de pages. Signaler l'écart au lieu de gonfler artificiellement le texte.
 
@@ -243,7 +244,7 @@ name: book-editorial
 description: Règles éditoriales pour planifier, rédiger et relire un livre
 ---
 
-Avant de rédiger, lire `config/project.md`, `config/editorial.md`, `docs/STYLE_GUIDE.md`, `docs/GLOSSARY.md` et le sommaire de la langue active. Exiger un brief `languages/<lang>/chapter-briefs/CHxxx.md` avec statut `APPROVED` avant la rédaction du chapitre; ne jamais contourner cette étape. Préserver l'originalité, la progression, la précision et la cohérence. Les pages cibles sont indicatives. Les sources doivent être réelles et traçables.
+Avant de rédiger, lire `config/project.md`, `config/editorial.md`, `docs/STYLE_GUIDE.md`, `docs/GLOSSARY.md` et le sommaire de la langue active. Le brief `APPROVED` est un plan synthétique, pas le texte du chapitre. Il doit prévoir points, visuels légendés et exercices avec énoncé/but sans correction. Le chapitre final doit développer chaque point avec des paragraphes substantiels, des explications, des exemples et des transitions dans la langue prévue. Pour les notions techniques/scientifiques, ajouter si utile une analogie signalée par `💡 Explication imagée`. Ne jamais contourner l'approbation du brief. Les pages cibles sont indicatives. Les sources doivent être réelles et traçables.
 """
     files['.opencode/skills/book-production/SKILL.md'] = """---
 name: book-production
@@ -277,19 +278,191 @@ __pycache__/
 """
     files['README.md']=f"""# {config['title']}
 
-Projet éditorial OpenCode autonome généré le {config['created_at_utc']}.
+Projet éditorial OpenCode généré le {config['created_at_utc']}. Ce dossier contient les commandes, les sources éditoriales, les scripts Python et les scripts multiplateformes nécessaires au workflow.
 
-## Démarrage
-1. Ouvrir un terminal dans ce dossier et lancer `opencode`.
-2. Exécuter `/book-plan`, puis `/book-summary`.
-3. Détailler le contenu avec `/book-chapter-brief CH001`; modifier avec `/book-chapter-brief-edit CH001 ...`, puis marquer explicitement le brief `APPROVED`.
-4. Rédiger seulement ensuite avec `/book-chapter CH001`, puis valider avec `/book-review CH001`.
-4. Suivre `docs/PROGRESS.md`; contrôler avec `/book-check`.
-5. Pour une nouvelle langue, utiliser `/book-language-create fr-CA`, puis lancer explicitement les commandes de traduction et `/book-language-build fr-CA`.
+## Tutoriel complet : du lancement à la publication
 
-Les commandes OpenCode sont dans `.opencode/commands/`. Les scripts déterministes sont dans `scripts/`. Les commandes `scriptable-*` sont des commandes OpenCode destinées à être invoquées via `opencode run`, sous réserve de compatibilité de la version installée. Elles ne sont pas des scripts shell autonomes.
+### Étape 1 : prérequis et installation
 
-**Limites explicites :** moteur d'images désactivé; prompts et chemins uniquement. La validation des marges et exigences de publication doit utiliser les spécifications officielles actuelles et enregistrer la date et les sources. Un contrôle local ne garantit jamais l'acceptation par une plateforme.
+- Installer Python 3.10 ou plus récent.
+- Installer OpenCode et vérifier que la commande `opencode` est disponible dans le terminal.
+- Pour produire les formats : installer Pandoc; pour le PDF, installer également XeLaTeX/une distribution LaTeX. Ces dépendances système ne sont pas installées par pip.
+- Sur Linux/macOS, ouvrir un terminal dans ce dossier. Sous Windows, utiliser CMD ou PowerShell.
+
+Linux/macOS :
+```sh
+sh scripts/setup_venv.sh
+sh scripts/install.sh
+```
+Windows CMD :
+```bat
+call scripts/setup_venv.bat
+call scripts/install.bat
+```
+PowerShell :
+```powershell
+./scripts/setup_venv.ps1
+./scripts/install.ps1
+```
+
+`setup_venv` crée `.venv`. `install` active cet environnement et installe les dépendances listées dans `scripts/requirements.txt`. Le projet utilise actuellement la bibliothèque standard Python; ce fichier reste disponible pour les dépendances futures.
+
+### Étape 2 : démarrer OpenCode
+
+Depuis la racine du projet :
+```sh
+opencode
+```
+
+Le questionnaire initial a déjà été rempli par le générateur. Il a demandé le titre, le sous-titre, l'auteur, la description, le type de livre, le public, la langue, le volume, le niveau, les polices, les contraintes, les dispositifs pédagogiques, les formats, les dimensions et marges, la mise en page, la recherche, le workflow, la validation, les illustrations, Git et le chemin du projet. Ces réponses sont enregistrées dans `config/generator-input.json` et les fichiers `config/*.md`. Pour modifier les choix, édite ces fichiers puis vérifie leur cohérence avant de relancer les commandes.
+
+### Étape 3 : créer le plan et le sommaire
+
+Dans OpenCode :
+```text
+/book-plan
+/book-summary
+```
+
+Vérifie le plan et le sommaire, les identifiants stables `CH001`, `CH002`, etc., l'ordre des chapitres et leur cohérence avec le public et le nombre de pages visé.
+
+### Étape 4 : préparer puis approuver les briefs synthétiques
+
+Pour chaque chapitre :
+```text
+/book-chapter-brief CH001
+/book-chapter-brief-edit CH001 ...
+/book-chapter-brief-validate CH001
+```
+
+Le brief ne doit contenir que les points à aborder, une intention concise, les visuels utiles avec légendes et les exercices avec énoncé, objectif et consignes. Il ne contient ni les explications finales, ni les paragraphes du chapitre, ni les corrections d'exercices. Après relecture et approbation explicite, le statut peut passer à `APPROVED`.
+
+Contrôler les briefs depuis le terminal :
+```sh
+sh scripts/run_python.sh scripts/chapter_briefs.py --root . --lang fr-FR --action list
+sh scripts/run_python.sh scripts/chapter_briefs.py --root . --lang fr-FR --action validate
+```
+
+Pour créer un modèle vide si nécessaire :
+```sh
+sh scripts/run_python.sh scripts/chapter_briefs.py --root . --lang fr-FR --action init --chapter CH001
+```
+
+Pour approuver par script, après avoir vérifié le brief et obtenu l'accord explicite :
+```sh
+sh scripts/run_python.sh scripts/chapter_briefs.py --root . --lang fr-FR --action approve --chapter CH001 --confirm-approval
+```
+
+Sous Windows, remplacer `sh scripts/run_python.sh` par `call scripts/run_python.bat`. Le script refuse l'approbation si les rubriques sont manquantes, si des champs de modèle restent à remplir ou si des cases de contrôle restent décochées.
+
+### Étape 5 : rédiger les vrais chapitres finaux
+
+Pour un chapitre :
+```text
+/book-chapter CH001
+/book-review CH001
+```
+
+Pour une plage ou tous les chapitres :
+```text
+/book-range CH002-CH005
+/book-all
+/book-review-all
+```
+
+La rédaction doit développer chaque point du brief en paragraphes et explications complètes dans la langue du projet. Les explications imagées utiles aux sujets techniques ou scientifiques sont signalées par `💡 Explication imagée`. Les illustrations, schémas et tableaux planifiés doivent être insérés ou référencés avec leurs légendes. Les exercices figurent avec leur énoncé et leur objectif; leurs corrections suivent la configuration pédagogique et ne sont pas ajoutées arbitrairement dans le chapitre.
+
+### Étape 6 : illustrations et couvertures
+
+Préparer les textes et spécifications :
+```text
+/book-cover-text
+/book-cover
+```
+
+Le moteur d'images est désactivé. Les prompts, chemins et catalogues ne sont pas des fichiers image générés. Ajoute ou génère les images avec l'outil choisi, puis remplace les placeholders et vérifie les chemins et les légendes. Une image vide `PLACEHOLDER_EMPTY` n'est pas publiable.
+
+### Étape 7 : créer une autre langue (optionnel)
+
+Dans OpenCode :
+```text
+/book-language-create es-ES
+/book-translate-chapter-briefs vers es-ES
+/book-language-all es-ES
+/book-language-assemble es-ES
+/book-language-build es-ES
+```
+
+La création d'une langue prépare seulement les dossiers. Les traductions doivent être explicitement demandées et relues. Les briefs traduits doivent être contrôlés/approuvés avant de rédiger ou finaliser la version correspondante. Chaque langue possède ses propres chemins d'images.
+
+### Étape 8 : vérifier le projet avant assemblage
+
+```sh
+sh scripts/run_python.sh scripts/validate_project.py --root .
+sh scripts/run_python.sh scripts/status.py --root .
+```
+
+Corrige toutes les erreurs bloquantes. Examine les avertissements relatifs aux illustrations, aux placeholders et aux éléments manquants. Dans OpenCode, utilise aussi `/book-check`.
+
+### Étape 9 : assembler le manuscrit
+
+Linux/macOS :
+```sh
+sh scripts/run_python.sh scripts/assemble.py --root . --lang fr-FR
+```
+Windows CMD :
+```bat
+call scripts/run_python.bat scripts/assemble.py --root . --lang fr-FR
+```
+
+Le manuscrit est écrit dans `languages/fr-FR/manuscript/MANUSCRIPT.md`. L'assembleur refuse d'écraser un fichier existant et bloque les chapitres sans paragraphe de prose; archive ou renomme l'ancien manuscrit avant de recommencer.
+
+### Étape 10 : compiler les livrables
+
+Tous les formats pris en charge et configurés :
+```sh
+sh scripts/run_python.sh scripts/build.py --root . --lang fr-FR --format all
+```
+
+Windows CMD : `call scripts/run_python.bat scripts/build.py --root . --lang fr-FR --format all`
+
+PowerShell : `./scripts/run_python.ps1 scripts/build.py --root . --lang fr-FR --format all`
+
+PDF seulement : `--format pdf`; EPUB seulement : `--format epub`. Le script exige Pandoc. Les PDF nécessitent XeLaTeX. Les marges en mode recherche officielle ne sont pas compilées tant que les valeurs vérifiées ne sont pas renseignées. La compilation ne génère pas les illustrations ni les couvertures manquantes et ne garantit pas l'acceptation par une plateforme.
+
+### Étape 11 : vérifier les livrables et préparer la publication
+
+```sh
+sh scripts/run_python.sh scripts/validate_project.py --root .
+sh scripts/run_python.sh scripts/status.py --root .
+```
+
+Examine `languages/fr-FR/output/BUILD_REPORT.json` et tous les fichiers de sortie. Vérifie visuellement les pages, la pagination, les polices, les illustrations, la couverture, le fond perdu et les exigences officielles en vigueur. Ne publie que les fichiers effectivement présents et vérifiés.
+
+## Inventaire des scripts générés
+
+- `scripts/chapter_briefs.py` : créer un modèle, lister, valider ou approuver explicitement les briefs.
+- `scripts/validate_project.py` : contrôle structurel, briefs, marqueurs et catalogue d'illustrations.
+- `scripts/status.py` : état factuel des briefs, chapitres, manuscrits et sorties.
+- `scripts/assemble.py` : assembler les chapitres et résoudre les marqueurs d'illustration.
+- `scripts/build.py` : compiler les formats PDF/EPUB pris en charge et produire `BUILD_REPORT.json`.
+- `scripts/prepare_illustration.py` : enregistrer une entrée de catalogue et son chemin cible, sans générer d'image.
+- `scripts/invoke_command.py` : appeler une commande OpenCode `scriptable-*`, avec option `--dry-run`.
+- `scripts/safe_exec.py` : exécution de code sous contrôles d'isolation, si le runtime requis est disponible.
+- `scripts/setup_venv.*` : créer l'environnement virtuel Python.
+- `scripts/install.*` : installer les dépendances Python.
+- `scripts/run_python.*` : activer l'environnement virtuel et exécuter un script Python.
+- `scripts/platform/run-opencode.*` : appeler `opencode run` si OpenCode est installé.
+
+Les suffixes `.sh`, `.bat` et `.ps1` correspondent respectivement à Linux/macOS, Windows CMD et PowerShell.
+
+## Limites de publication
+
+La compilation locale ne garantit pas l'acceptation Amazon KDP ou Etsy. Vérifie les spécifications officielles au moment de publier. Les marges, le fond perdu, le dos, la résolution et les couvertures doivent être contrôlés pour chaque format.
+
+## État et reprise
+
+Consulte `docs/PROGRESS.md`, `docs/DECISIONS.md`, `state/` et `logs/`. Avant de reprendre, vérifie les fichiers réellement présents et exécute les scripts de statut et de validation.
 """
     files['config/project.md']=f"""# Fiche projet
 - Titre : {config['title']}
@@ -309,6 +482,10 @@ Les commandes OpenCode sont dans `.opencode/commands/`. Les scripts déterminist
 - Priorité à la clarté, la cohérence, l'originalité, l'exactitude et l'utilité.
 - Ne pas inventer de citations, études, références, données ou témoignages.
 - Définir les termes techniques à leur première occurrence et maintenir le glossaire.
+- Les briefs sont des plans synthétiques : points à aborder, visuels légendés et énoncés/buts des exercices, sans texte final ni correction.
+- Les chapitres sont le contenu final : chaque point doit être développé en explications et paragraphes substantiels, dans la langue prévue.
+- Pour une notion technique/scientifique, utiliser si utile le repère `💡 Explication imagée` pour une analogie pédagogique liée au point traité.
+- Les exercices apparaissent avec leur énoncé et leur objectif; leurs corrections suivent exclusivement le dispositif pédagogique sélectionné dans la configuration.
 - Éviter répétitions, remplissage et promesses excessives.
 - Les pages cibles sont approximatives. Signaler les écarts sans gonfler artificiellement le contenu.
 - Le ton et les conventions doivent rester cohérents dans tous les chapitres et toutes les langues.
@@ -352,7 +529,7 @@ Le script `scripts/safe_exec.py` accepte seulement Python, JavaScript (si Node e
     files['docs/DECISIONS.md']=f"# Décisions projet\n\n- Images distinctes par langue.\n- Moteur d'images désactivé : préparation de prompts et chemins seulement.\n- Exécution de code isolée et contrôlée; aucun résultat non vérifié.\n- Création d'une langue sans génération de contenu automatique.\n- Formats choisis : {', '.join(config['publishing']['formats'])}.\n- Les pages cibles sont indicatives.\n"
     files['docs/WORKFLOW.md']="# Workflow opérationnel\n\n1. Planifier. 2. Valider le sommaire. 3. Rédiger chapitre par chapitre ou par plages. 4. Valider. 5. Préparer les illustrations. 6. Assembler. 7. Construire les formats. 8. Contrôler et archiver le rapport.\n"
     files['prompts/planning/BOOK_PLAN.md']="# Prompt de planification\n\nProduis un plan éditorial approfondi à partir des fichiers de configuration. Pose les questions manquantes. Identifie objectifs, public, progression, chapitres, activités, risques d'exactitude, besoins de recherche et critères d'acceptation.\n"
-    files['prompts/writing/CHAPTER.md']="# Prompt de rédaction\n\nRédige uniquement le chapitre demandé selon le sommaire validé. Vérifie cohérence, progression, originalité, niveau, références et marqueurs d'illustration. Ne simule aucun résultat d'exécution.\n"
+    files['prompts/writing/CHAPTER.md']="# Prompt de rédaction\n\nLe brief APPROVED est un plan synthétique et ne doit jamais remplacer le chapitre. Développe chaque point en texte final substantiel dans la langue du projet : paragraphes explicatifs, définitions, exemples, transitions et profondeur adaptée au public. Pour les notions techniques/scientifiques, ajoute si utile une analogie pédagogique liée au point et signale-la par `💡 Explication imagée`. Intègre les visuels prévus avec légendes. Les exercices comprennent l'énoncé et le but, sans corrigé dans le chapitre sauf si la configuration le demande. Vérifie que chaque point du brief est réellement expliqué et ne simule aucun résultat d'exécution.\n"
     files['prompts/reviewing/REVIEW.md']="# Prompt de relecture\n\nVérifie exactitude, logique, structure, répétitions, lisibilité, terminologie, références, code, illustrations et alignement avec le sommaire. Sépare les erreurs certaines des recommandations éditoriales.\n"
     files['prompts/translation/TRANSLATE.md']="# Prompt de traduction\n\nTraduis l'élément désigné vers la langue cible en préservant sens, voix, niveau, structure, références et marqueurs. Consulte glossaire et style guide. Ne supprime aucun contenu sans le signaler.\n"
     files['prompts/illustrations/ILLUSTRATION.md']="# Prompt de préparation d'illustration\n\nDécris précisément sujet, composition, point de vue, motifs, densité, contraintes, format et lisibilité. Prépare un prompt et un chemin cible par langue. Ne lance aucun moteur d'images.\n"
@@ -399,8 +576,95 @@ Le script `scripts/safe_exec.py` accepte seulement Python, JavaScript (si Node e
     files['scripts/platform/run-opencode.sh']="#!/usr/bin/env sh\nset -eu\ncommand -v opencode >/dev/null 2>&1 || { echo 'OpenCode introuvable dans PATH.' >&2; exit 127; }\nexec opencode run \"$*\"\n"
     files['scripts/platform/run-opencode.bat']='@echo off\nwhere opencode >nul 2>nul || (echo OpenCode introuvable dans PATH. 1>&2 & exit /b 127)\nopencode run %*\n'
     files['scripts/platform/run-opencode.ps1']="if (-not (Get-Command opencode -ErrorAction SilentlyContinue)) { Write-Error 'OpenCode introuvable dans PATH.'; exit 127 }\nopencode run @args\nexit $LASTEXITCODE\n"
+    files['scripts/setup_venv.sh'] = r'''#!/usr/bin/env sh
+set -eu
+ROOT=$(CDPATH= cd "$(dirname "$0")/.." && pwd)
+if [ -x "$ROOT/.venv/bin/python" ]; then echo "Environnement virtuel déjà présent : $ROOT/.venv"; exit 0; fi
+command -v python3 >/dev/null 2>&1 || { echo "Python 3.10+ requis." >&2; exit 127; }
+python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)' || { echo "Python 3.10+ requis." >&2; exit 2; }
+python3 -m venv "$ROOT/.venv"
+echo "Environnement virtuel créé : $ROOT/.venv"
+'''
+    files['scripts/setup_venv.bat'] = r'''@echo off
+setlocal
+set "ROOT=%~dp0.."
+if exist "%ROOT%\.venv\Scripts\python.exe" (echo Environnement virtuel déjà présent : %ROOT%\.venv & exit /b 0)
+where py >nul 2>nul && (py -3 -c "import sys; raise SystemExit(0 if sys.version_info >= (3,10) else 1)" && py -3 -m venv "%ROOT%\.venv" && exit /b 0)
+where python >nul 2>nul || (echo Python 3.10+ requis. 1>&2 & exit /b 127)
+python -c "import sys; raise SystemExit(0 if sys.version_info >= (3,10) else 1)" || exit /b 2
+python -m venv "%ROOT%\.venv"
+exit /b %errorlevel%
+'''
+    files['scripts/setup_venv.ps1'] = r'''$ErrorActionPreference = "Stop"
+$Root = Split-Path -Parent $PSScriptRoot
+if ((Test-Path (Join-Path $Root ".venv/Scripts/python.exe")) -or (Test-Path (Join-Path $Root ".venv/bin/python"))) { Write-Output "Environnement virtuel déjà présent : .venv"; exit 0 }
+$Py = Get-Command py -ErrorAction SilentlyContinue
+if ($Py) { & py -3 -c "import sys; raise SystemExit(0 if sys.version_info >= (3,10) else 1)"; if ($LASTEXITCODE -ne 0) { throw "Python 3.10+ requis." }; & py -3 -m venv (Join-Path $Root ".venv") } else { $Py = Get-Command python -ErrorAction SilentlyContinue; if (-not $Py) { throw "Python 3.10+ requis." }; & python -c "import sys; raise SystemExit(0 if sys.version_info >= (3,10) else 1)"; if ($LASTEXITCODE -ne 0) { throw "Python 3.10+ requis." }; & python -m venv (Join-Path $Root ".venv") }
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+Write-Output "Environnement virtuel créé : .venv"
+'''
+    files['scripts/install.sh'] = r'''#!/usr/bin/env sh
+set -eu
+ROOT=$(CDPATH= cd "$(dirname "$0")/.." && pwd)
+sh "$ROOT/scripts/setup_venv.sh"
+. "$ROOT/.venv/bin/activate"
+python -m pip install -r "$ROOT/scripts/requirements.txt"
+echo "Dépendances Python installées."
+'''
+    files['scripts/install.bat'] = r'''@echo off
+setlocal
+set "ROOT=%~dp0.."
+call "%ROOT%\scripts/setup_venv.bat" || exit /b %errorlevel%
+call "%ROOT%\.venv\Scripts\activate.bat" || exit /b 1
+python -m pip install -r "%ROOT%\scripts\requirements.txt"
+exit /b %errorlevel%
+'''
+    files['scripts/install.ps1'] = r'''$ErrorActionPreference = "Stop"
+$Root = Split-Path -Parent $PSScriptRoot
+& (Join-Path $PSScriptRoot "setup_venv.ps1")
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$Activate = Join-Path $Root ".venv/Scripts/Activate.ps1"
+if (-not (Test-Path $Activate)) { $Activate = Join-Path $Root ".venv/bin/Activate.ps1" }
+if (-not (Test-Path $Activate)) { throw "Activation de l'environnement virtuel introuvable : $Activate" }
+. $Activate
+python -m pip install -r (Join-Path $Root "scripts/requirements.txt")
+exit $LASTEXITCODE
+'''
+    files['scripts/run_python.sh'] = r'''#!/usr/bin/env sh
+set -eu
+ROOT=$(CDPATH= cd "$(dirname "$0")/.." && pwd)
+[ -f "$ROOT/.venv/bin/activate" ] || { echo "Environnement absent. Lancez sh scripts/setup_venv.sh puis sh scripts/install.sh." >&2; exit 2; }
+. "$ROOT/.venv/bin/activate"
+cd "$ROOT"
+exec python "$@"
+'''
+    files['scripts/run_python.bat'] = r'''@echo off
+setlocal
+set "ROOT=%~dp0.."
+if not exist "%ROOT%\.venv\Scripts\activate.bat" (echo Environnement absent. Lancez scripts/setup_venv.bat puis scripts/install.bat. 1>&2 & exit /b 2)
+call "%ROOT%\.venv\Scripts\activate.bat" || exit /b 1
+pushd "%ROOT%"
+python %*
+set "RC=%errorlevel%"
+popd
+exit /b %RC%
+'''
+    files['scripts/run_python.ps1'] = r'''$ErrorActionPreference = "Stop"
+$Root = Split-Path -Parent $PSScriptRoot
+$Activate = Join-Path $Root ".venv/Scripts/Activate.ps1"
+if (-not (Test-Path $Activate)) { $Activate = Join-Path $Root ".venv/bin/Activate.ps1" }
+if (-not (Test-Path $Activate)) { throw "Environnement absent. Lancez ./scripts/setup_venv.ps1 puis ./scripts/install.ps1." }
+. $Activate
+if ($args.Count -lt 1) { throw "Usage: .\scripts\run_python.ps1 scripts\status.py --root ." }
+$Script = $args[0]; $Rest = @(); if ($args.Count -gt 1) { $Rest = $args[1..($args.Count-1)] }
+Push-Location $Root
+& python $Script @Rest
+$RC = $LASTEXITCODE
+Pop-Location
+exit $RC
+'''
     for rel,content in files.items(): write_file(target,rel,content,force=overwrite)
-    for rel in ['scripts/platform/run-opencode.sh']:
+    for rel in ['scripts/platform/run-opencode.sh','scripts/setup_venv.sh','scripts/install.sh','scripts/run_python.sh']:
         try: (target/rel).chmod(0o755)
         except OSError: pass
     # create initial chapter directories and no fake chapter content
@@ -422,7 +686,7 @@ def make_language_files(lang, config, primary=False):
     return {
         base+'SUMMARY.md':f"# Sommaire\n\nLivre : {config['title']}\nLangue : {lang}\n\n> À produire avec `/book-summary`.\n",
         base+'chapters/README.md':f"# Chapitres ({lang})\n\nCréer un fichier par chapitre, par exemple `CH001.md`. Un chapitre final ne doit être rédigé qu'après approbation de son brief dans `../chapter-briefs/`.\n",
-        base+'chapter-briefs/README.md':f"# Briefs détaillés des chapitres ({lang})\n\nUn fichier par chapitre, par exemple `CH001.md`. Définir précisément objectifs, sections, explications, exemples, exercices avec énoncés, critères de réussite, corrigés attendus, illustrations et sources avant rédaction.\n\nWorkflow : `/book-chapter-brief CH001` → `/book-chapter-brief-edit CH001` → statut `APPROVED` explicite → `/book-chapter CH001`.\n",
+        base+'chapter-briefs/README.md':f"# Briefs de chapitres ({lang})\n\nUn fichier par chapitre, par exemple `CH001.md`. Le brief est un plan synthétique : il liste les points à aborder sans écrire les explications finales. Il référence les illustrations, schémas et tableaux avec légendes. Les exercices ont un énoncé, un objectif et des consignes, sans corrigé.\n\nWorkflow : `/book-chapter-brief CH001` → `/book-chapter-brief-edit CH001 ...` → `/book-chapter-brief-validate CH001` et approbation explicite → `/book-chapter CH001`.\n",
         base+'chapter-briefs/INDEX.md':f"# Index des briefs ({lang})\n\n| Chapitre | Fichier | Statut | Dernière vérification | Notes |\n|---|---|---|---|---|\n\nAucune description détaillée créée. Ajouter une ligne pour chaque brief.\n",
         base+'manuscript/README.md':"# Manuscrit assemblé\n\nFichiers assemblés uniquement après validation.\n",
         base+'illustrations/ILLUSTRATIONS.md':"# Catalogue des illustrations\n\n| ID | Symbole | Légende | Description | Prompt | Chemin relatif | Mode | Statut |\n|---|---|---|---|---|---|---|---|\n",
@@ -433,89 +697,98 @@ def make_language_files(lang, config, primary=False):
         base+'language.json':json_dump({"language_code":lang,"primary":primary,"image_policy":"distinct_image_per_language","content_generation_on_create":False,"created_at_utc":datetime.now(timezone.utc).isoformat()})
     }
 
-CHAPTER_BRIEF_TEMPLATE = """# Brief détaillé du chapitre CHXXX
+CHAPTER_BRIEF_TEMPLATE = """# Brief synthétique du chapitre CHXXX
 
 - **Titre provisoire :** À définir depuis le sommaire
 - **Langue :** À renseigner
 - **Statut :** `DRAFT`
 - **Version :** 1
-- **Dépendances / prérequis :** À définir
-- **Objectif général :** À définir
-- **Résultats d'apprentissage observables :**
-  - [ ] À définir
+- **Objectif du chapitre :** À définir en une ou deux phrases
+- **Résultat attendu pour le lecteur :** À définir brièvement
+- **Prérequis :** À définir brièvement
 
-## 1. Place dans la progression du livre
-Décrire le lien avec les chapitres précédents et suivants, les connaissances supposées et les limites de périmètre.
+> Ce document est un plan éditorial, pas le chapitre. Ne pas rédiger ici les paragraphes finaux, les explications complètes, les dialogues ni les solutions d'exercices. Décrire seulement les points à aborder et les éléments à prévoir.
 
-## 2. Plan de contenu détaillé
-Pour chaque section, préciser l'intention, les notions exactes, les explications nécessaires, les exemples, les erreurs fréquentes et le niveau de détail attendu.
+## 1. Place dans le livre
+- **Rôle dans la progression :**
+- **Lien avec les chapitres précédents/suivants :**
+- **Limites du sujet :**
 
-### 2.1 Section à définir
-- **But de la section :**
-- **Notions à couvrir :**
-- **Explications indispensables :**
-- **Exemple(s) concret(s) :**
-- **Contre-exemple / piège :**
-- **Vérifications factuelles ou sources à rechercher :**
-- **Transition vers la section suivante :**
+## 2. Points à aborder
+Lister les points dans l'ordre. Pour chaque point, indiquer brièvement ce que le lecteur doit comprendre ou savoir faire, sans développer le contenu.
 
-## 3. Exemples, études de cas ou démonstrations
-Décrire précisément chaque exemple et ce qu'il doit démontrer. Pour du code, indiquer langage/version, fichiers, prérequis, commande d'exécution et résultat attendu. Les résultats non exécutés doivent rester identifiés comme théoriques.
+### 2.1 Point à définir
+- **Notions / sous-points :**
+- **Intention de traitement (résumé bref, pas le texte final) :**
+- **Exemple ou démonstration à prévoir, si utile :**
+- **Vérification/source nécessaire, si applicable :**
+
+## 3. Illustrations, schémas et tableaux
+Ne renseigner que les éléments requis par la configuration du livre et utiles à la compréhension. Chaque élément doit avoir un identifiant stable et une légende qui pourra être affichée dans le chapitre. Si aucun n'est nécessaire, écrire « Aucun selon la configuration ».
+
+### VIS-CHXXX-01 : Type et titre court
+- **Type :** illustration / schéma / tableau / graphique
+- **Point du chapitre concerné :**
+- **But :**
+- **Légende destinée au lecteur :**
+- **Description sommaire de ce qui doit apparaître :**
+- **Chemin cible propre à la langue :**
 
 ## 4. Exercices et activités
-Créer une sous-section par exercice. Si aucun exercice n'est requis, expliquer pourquoi.
+Respecter `config/generator-input.json` et `config/editorial.md`. Pour chaque exercice, inclure l'énoncé prévu pour le lecteur et le but pédagogique, sans correction, réponse finale ni raisonnement de solution. Si aucun exercice n'est prévu, indiquer « Aucun selon la configuration ».
 
 ### EX-CHXXX-01 : Titre de l'exercice
-- **Objectif évalué :**
-- **Type / difficulté / durée indicative :**
-- **Énoncé complet destiné au lecteur :**
-- **Contexte, données et matériel fourni :**
-- **Consignes numérotées :**
-- **Contraintes et critères de réussite :**
-- **Indices éventuels :**
-- **Corrigé attendu / solution de référence :**
-- **Explication pédagogique du corrigé :**
-- **Erreurs fréquentes à expliquer :**
-- **Emplacement de la correction :** selon la configuration éditoriale du livre
+- **But pédagogique :**
+- **Énoncé destiné au lecteur :**
+- **Consignes / données fournies :**
+- **Critères de réussite, sans donner la solution :**
+- **Durée ou difficulté indicative, si utile :**
+- **Emplacement prévu des corrections selon la configuration :**
 
-## 5. Illustration(s) à prévoir
-Pour chaque illustration : identifiant stable, objectif pédagogique, légende provisoire, description de composition, emplacement, prompt éventuel et chemin d'image propre à la langue. Ne jamais déclarer l'image générée.
-
-## 6. Vocabulaire et cohérence
-- **Termes à définir :**
-- **Termes du glossaire à réutiliser :**
-- **Liens avec les autres chapitres :**
+## 5. Vocabulaire et cohérence
+- **Termes à définir ou à réutiliser :**
+- **Liens avec le glossaire :**
 - **Répétitions à éviter :**
 
-## 7. Sources et points à vérifier
-Lister les affirmations nécessitant une source, les références fiables attendues et les incertitudes. Ne jamais inventer de référence.
+## 6. Sources et points à vérifier
+Lister uniquement les affirmations ou sujets qui nécessitent une vérification, sans écrire le chapitre.
 
-## 8. Conclusion du chapitre
-- **Synthèse des idées clés :**
-- **Points à retenir :**
-- **Transition vers le chapitre suivant :**
+## 7. Conclusion et transition prévues
+- **Idées à récapituler :**
+- **Transition vers la suite :**
 
-## 9. Critères de complétude avant rédaction
-- [ ] Toutes les sections sont décrites avec assez de détail pour rédiger sans inventer le périmètre.
-- [ ] Les exercices ont des énoncés complets et un corrigé attendu, si applicable.
-- [ ] Les objectifs correspondent au contenu et aux exercices.
-- [ ] Les illustrations prévues ont un ID et un chemin propre à la langue.
-- [ ] Les sources à vérifier sont identifiées.
-- [ ] Le brief est cohérent avec le sommaire et les autres briefs.
-- [ ] Validation explicite de l'utilisateur reçue avant de passer le statut à `APPROVED`.
+## 8. Contrôle du brief avant approbation
+- [ ] Les points sont clairs et ordonnés, mais ne constituent pas le texte final.
+- [ ] Les visuels nécessaires selon la configuration ont un identifiant et une légende.
+- [ ] Les exercices ont un énoncé et un but, sans correction ni solution.
+- [ ] Le brief est cohérent avec le sommaire, le public et la langue.
+- [ ] L'utilisateur a explicitement approuvé ce brief avant le passage à `APPROVED`.
 """
 
 CHAPTER_BRIEF_TOOL = r'''#!/usr/bin/env python3
-"""Manage and validate detailed chapter briefs before chapter drafting."""
+"""Create, list, structurally validate, and explicitly approve concise chapter briefs."""
 import argparse, re, sys
 from pathlib import Path
-REQUIRED = ["## 1. Place dans la progression du livre", "## 2. Plan de contenu détaillé", "## 4. Exercices et activités", "## 9. Critères de complétude avant rédaction"]
+REQUIRED = ["## 1. Place dans le livre", "## 2. Points à aborder", "## 4. Exercices et activités", "## 8. Contrôle du brief avant approbation"]
+STATUS_RE = re.compile(r'^- \*\*Statut :\*\* `([^`]+)`', re.M)
+VALID_STATUSES = {'DRAFT','IN_REVIEW','APPROVED'}
+
+def check_brief(path):
+ body=path.read_text(encoding='utf-8'); m=STATUS_RE.search(body); status=m.group(1) if m else 'STATUS_MISSING'
+ missing=[h for h in REQUIRED if h not in body]
+ errors=[]
+ if status not in VALID_STATUSES: errors.append(f'{path.name}: invalid/missing status {status}')
+ if missing: errors.append(f'{path.name}: missing required sections: {", ".join(missing)}')
+ if re.search(r'(?im)^- \*\*Corrig[eé]\s*(attendu|complet)?\s*:',body): errors.append(f'{path.name}: brief must not contain exercise corrections')
+ if re.search(r'(?im)^###?\s+.*(explications indispensables|corrig[eé] attendu|solution de r[eé]f[eé]rence)',body): errors.append(f'{path.name}: brief appears to request final chapter content or a solution')
+ return body,status,errors
+
 def main():
- p=argparse.ArgumentParser(description=__doc__); p.add_argument('--root',default='.'); p.add_argument('--lang',required=True); p.add_argument('--action',choices=['list','validate','init'],default='list'); p.add_argument('--chapter',help='Chapter ID, e.g. CH001'); a=p.parse_args()
+ p=argparse.ArgumentParser(description=__doc__); p.add_argument('--root',default='.'); p.add_argument('--lang',required=True); p.add_argument('--action',choices=['list','validate','init','approve'],default='list'); p.add_argument('--chapter',help='Chapter ID, e.g. CH001'); p.add_argument('--confirm-approval',action='store_true',help='Explicitly confirm user approval of the selected brief'); a=p.parse_args()
  root=Path(a.root).resolve(); folder=root/'languages'/a.lang/'chapter-briefs'
  if not folder.is_dir(): print('Brief directory not found:',folder,file=sys.stderr); return 2
+ if a.action in ('init','approve') and (not a.chapter or not re.fullmatch(r'CH[0-9]{3,4}',a.chapter)): p.error('--chapter must look like CH001')
  if a.action=='init':
-  if not a.chapter or not re.fullmatch(r'CH[0-9]{3,4}',a.chapter): p.error('--chapter must look like CH001')
   dest=folder/(a.chapter+'.md')
   if dest.exists(): print('Refusing to overwrite existing brief:',dest,file=sys.stderr); return 3
   template=root/'templates/chapters/CHAPTER_BRIEF_TEMPLATE.md'
@@ -530,25 +803,40 @@ def main():
     if sep is not None: lines.insert(sep+1,row)
     else: lines.append(row)
     index.write_text('\n'.join(lines)+'\n',encoding='utf-8')
-  print('Created draft brief:',dest); print('Status remains DRAFT; do not draft the chapter until explicitly approved.'); return 0
+  print('Created draft brief:',dest); print('Status remains DRAFT; explicit approval is required.'); return 0
  briefs=sorted(folder.glob('CH*.md'))
  if a.action=='list':
   if not briefs: print('No chapter briefs yet. Use --action init --chapter CH001 or /book-chapter-brief.')
   for f in briefs:
-   m=re.search(r'^- \*\*Statut :\*\* `([^`]+)`',f.read_text(encoding='utf-8'),re.M)
-   print(f'{f.stem}\t{m.group(1) if m else "STATUS_MISSING"}\t{f.relative_to(root)}')
+   m=STATUS_RE.search(f.read_text(encoding='utf-8')); print(f'{f.stem}\t{m.group(1) if m else "STATUS_MISSING"}\t{f.relative_to(root)}')
   return 0
+ if a.action=='approve':
+  if not a.confirm_approval: print("Refusing approval without --confirm-approval; confirm the user approval first.",file=sys.stderr); return 5
+  dest=folder/(a.chapter+'.md')
+  if not dest.is_file(): print('Brief not found:',dest,file=sys.stderr); return 2
+  body,status,errors=check_brief(dest)
+  if errors: print('\n'.join('ERROR: '+e for e in errors),file=sys.stderr); return 1
+  if '[ ]' in body: print('Refusing approval: unchecked checklist items remain.',file=sys.stderr); return 6
+  if re.search(r'(?im)(?:^|:\s*)(?:à définir|à renseigner|à compléter|TODO|TBD)(?:$|[.;])',body): print('Refusing approval: unresolved placeholders remain.',file=sys.stderr); return 6
+  body=STATUS_RE.sub('- **Statut :** `APPROVED`',body,count=1)
+  dest.write_text(body,encoding='utf-8')
+  index=folder/'INDEX.md'
+  if index.exists():
+   lines=index.read_text(encoding='utf-8').splitlines()
+   for i,line in enumerate(lines):
+    if line.startswith('| '+a.chapter+' |'):
+     cols=[c.strip() for c in line.strip('|').split('|')]
+     if len(cols)>=3: cols[2]='APPROVED'; lines[i]='| '+' | '.join(cols)+' |'
+     break
+   index.write_text('\n'.join(lines)+'\n',encoding='utf-8')
+  print('Approved brief:',dest); return 0
  errors=[]
  for f in briefs:
-  body=f.read_text(encoding='utf-8'); m=re.search(r'^- \*\*Statut :\*\* `([^`]+)`',body,re.M); status=m.group(1) if m else 'STATUS_MISSING'
-  missing=[h for h in REQUIRED if h not in body]
-  if status not in {'DRAFT','IN_REVIEW','APPROVED'}: errors.append(f'{f.name}: invalid/missing status {status}')
-  if missing: errors.append(f'{f.name}: missing required sections: {", ".join(missing)}')
-  if status=='APPROVED' and ('[ ] Toutes les sections' in body or '[ ] Les exercices' in body): errors.append(f'{f.name}: approval checklist still unchecked; review manually')
+  _,_,found=check_brief(f); errors.extend(found)
  if errors: print('\n'.join('ERROR: '+e for e in errors),file=sys.stderr); return 1
  print(f'Validated structure of {len(briefs)} brief(s). This does not prove editorial quality or user approval.'); return 0
 if __name__=='__main__': sys.exit(main())
-'''
+''' 
 
 PREPARE_ILLUSTRATION = r'''#!/usr/bin/env python3
 """Register an illustration target for one language without generating image content."""
@@ -672,6 +960,11 @@ def validate(root, lang=None):
     btxt=brief.read_text(encoding='utf-8')
     status=re.search(r'^- \*\*Statut :\*\* `([^`]+)`',btxt,re.M)
     if not status or status.group(1)!='APPROVED': errors.append(f'{code}: chapter {chapter.stem} brief is not APPROVED')
+   chapter_text=chapter.read_text(encoding='utf-8')
+   words=re.findall(r"\b[\wÀ-ÿ’'-]+\b",chapter_text)
+   prose_lines=[line.strip() for line in chapter_text.splitlines() if line.strip() and not line.lstrip().startswith(('#','-','*','|','```','{{ILL:'))]
+   if len(words)<150: warnings.append(f'{code}: chapter {chapter.stem} contains only {len(words)} words; verify it is a developed final chapter, not a brief or outline')
+   if not prose_lines: warnings.append(f'{code}: chapter {chapter.stem} has no prose paragraphs; likely outline-only content')
   if not cat.is_file(): errors.append(f'{code}: illustration catalog missing'); continue
   text=cat.read_text(encoding='utf-8')
   ids=[]; paths=[]
@@ -725,6 +1018,14 @@ def main():
    if len(c)>=8 and c[0]: entries[c[0]]=c[5]
  chapters=sorted((ld/'chapters').glob('CH*.md'))
  if not chapters: print('No CH*.md files found',file=sys.stderr); return 3
+ empty_or_outline=[]
+ for chapter in chapters:
+  text=chapter.read_text(encoding='utf-8')
+  prose=[line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith(('#','-','*','|','```','{{ILL:'))]
+  if not prose: empty_or_outline.append(chapter.name)
+ if empty_or_outline:
+  print('Refusing to assemble chapters without prose paragraphs (empty or outline-only): '+', '.join(empty_or_outline),file=sys.stderr)
+  return 6
  out=['<!-- Generated file. Edit source chapters, not this file. -->',f'<!-- Language: {a.lang} -->','']
  unresolved=[]
  for f in chapters:

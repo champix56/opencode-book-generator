@@ -56,10 +56,14 @@ Exécution isolée contrôlée avec délai, sortie plafonnée, répertoire tempo
 - Ne jamais prétendre à une acceptation de plateforme ou à une vérification non effectuée.
 
 
-## Brief éditorial détaillé obligatoire avant rédaction (version 1.1.0)
-- Chaque langue dispose de `chapter-briefs/INDEX.md` et d’un fichier par chapitre.
-- `/book-chapter-brief` prépare le contenu détaillé sans rédiger le chapitre final.
-- `/book-chapter-brief-edit` prend en charge ajout, correction, remplacement, déplacement, suppression et validation explicite.
-- Le brief couvre objectifs, prérequis, sous-sections, notions, explications, exemples, exercices avec énoncé complet, consignes, critères de réussite, corrigés attendus, illustrations, sources et transitions.
-- Le chapitre ne peut être rédigé que si le brief porte `APPROVED`. Les commandes de plage et de livre entier doivent bloquer ou signaler les chapitres non approuvés.
-- `scripts/chapter_briefs.py` permet l’initialisation d’un modèle, la liste des statuts et la validation structurelle; il refuse d’écraser un brief existant.
+## Brief éditorial avant rédaction (historique 1.1.0, remplacé en 1.2.0)
+Dans la version 1.1.0, le brief contenait à tort des explications détaillées et des corrigés attendus. Cette conception est remplacée en 1.2.0 : le brief est synthétique, le chapitre est le contenu final et les corrigés ne figurent pas dans le brief.
+
+## Corrections éditoriales et multiplateformes (version 1.2.0)
+- Le brief est un plan synthétique intermédiaire : points à aborder sans paragraphes finaux; visuels nécessaires selon la configuration avec identifiants et légendes; exercices avec énoncé, objectif et consignes, sans correction ni solution.
+- Le chapitre est le contenu final rédigé dans la langue prévue; chaque point est développé en explications substantielles, exemples, transitions et structure éditoriale adaptée.
+- Pour les sujets techniques/scientifiques, ajouter si cela aide une explication imagée ou une analogie liée au point, signalée par `💡 Explication imagée`.
+- Une commande IA de validation et une action CLI d'approbation explicite contrôlent le brief avant rédaction; le script ne doit pas approuver automatiquement.
+- Le validateur signale les chapitres trop courts et ceux sans paragraphes de prose afin de détecter un plan déguisé en chapitre.
+- Chaque projet généré embarque les scripts de virtualenv, d'installation et d'exécution Python SH/BAT/PS1, `requirements.txt`, et des scripts d'appel OpenCode.
+- Le README du projet généré décrit le questionnaire, les commandes OpenCode, les scripts et les étapes de production jusqu'au contrôle de publication.

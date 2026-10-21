@@ -19,12 +19,21 @@
 Les tests automatisés présents couvrent les comportements testables dans l'environnement de construction. Les tests natifs Windows nécessitent une machine Windows; ils ne sont pas prétendus exécutés sous Linux.
 
 
-## Tests ajoutés en 1.1.0 : briefs détaillés
+## Tests historiques de 1.1.0 (attentes remplacées en 1.2.0)
 - Vérifier que chaque langue possède `chapter-briefs/README.md` et `INDEX.md`.
-- Vérifier que le modèle de brief couvre plan de contenu, exercices, énoncés, critères et corrigés attendus.
+- Ancienne attente : le brief contenait le plan détaillé et les corrigés attendus. Remplacée en 1.2.0 par un brief synthétique sans corrections.
 - Vérifier les commandes normales et `scriptable-` de création/modification de briefs.
 - Vérifier que `/book-chapter`, `/book-range` et `/book-all` interdisent la rédaction sans brief APPROVED.
 - Créer un brief avec `scripts/chapter_briefs.py --action init`, lister les statuts et valider la structure.
 - Confirmer que l'initialisation refuse d'écraser un brief existant et inscrit le nouveau brief dans l'index.
 - Créer un chapitre sans brief APPROVED et vérifier que le validateur signale un blocage.
 - Tester la traduction des briefs individuels et en lot vers une langue distincte.
+
+## Tests ajoutés en 1.2.0
+- Le brief est synthétique et ne demande pas de corrigé d'exercice.
+- Les commandes de rédaction exigent `APPROVED` et prescrivent un chapitre final développé, non une reprise des puces.
+- Le script de briefs refuse l'approbation sans `--confirm-approval`, contrôle les placeholders et met à jour l'index.
+- Le validateur signale les chapitres trop courts ou sans prose; l’assembleur bloque les chapitres uniquement constitués de titres/puces.
+- Le projet généré embarque `setup_venv`, `install`, `run_python`, `requirements.txt` et les wrappers OpenCode en SH/BAT/PS1.
+- Le README généré décrit le parcours jusqu'à l'assemblage, la compilation et le contrôle.
+- Les scripts Python générés sont compilés avec `py_compile`; les scripts shell sont contrôlés avec `bash -n`. Les scripts Windows/macOS restent à exécuter nativement sur leurs plateformes respectives avant de déclarer ces plateformes testées.

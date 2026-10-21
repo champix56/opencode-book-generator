@@ -8,7 +8,7 @@ bookgen=importlib.util.module_from_spec(spec); spec.loader.exec_module(bookgen)
 class GeneratorTests(unittest.TestCase):
     def config(self, parent, name='test-book'):
         return {
-            'schema_version':1,'generator_version':'1.0.0','created_at_utc':'2026-10-19T00:00:00+00:00',
+            'schema_version':1,'generator_version':'1.2.0','created_at_utc':'2026-10-19T00:00:00+00:00',
             'title':'Livre de test','subtitle':'','author':'Auteur Test','description':'Description de test',
             'book_type':'Guide pratique','audience':'Débutant','initial_language':'fr-FR','target_pages_approx':80,
             'technical_level':{'initial':0,'final':30},'fonts':'automatique','constraints':'aucune',
@@ -94,7 +94,7 @@ class GeneratorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             target=Path(td)/'book'; bookgen.build_project(self.config(td), target)
             chapter=target/'languages/fr-FR/chapters/CH001.md'
-            chapter.write_text('# Chapitre test\n\n{{ILL:ILL-CH001-001}}\n',encoding='utf-8')
+            chapter.write_text('# Chapitre test\n\nCette illustration est requise pour expliquer le sujet au lecteur.\n\n{{ILL:ILL-CH001-001}}\n',encoding='utf-8')
             cat=target/'languages/fr-FR/illustrations/ILLUSTRATIONS.md'
             cat.write_text('# Catalogue\n\n| ID | Symbole | Légende | Description | Prompt | Chemin relatif | Mode | Statut |\n|---|---|---|---|---|---|---|---|\n| ILL-CH001-001 | ◇ | Test | Description | null | images/ILL-CH001-001-fr-FR.png | user_provided | PLACEHOLDER_EMPTY |\n',encoding='utf-8')
             cp=subprocess.run(['python3',str(target/'scripts/assemble.py'),'--root',str(target),'--lang','fr-FR'],text=True,capture_output=True)
@@ -136,7 +136,8 @@ class GeneratorTests(unittest.TestCase):
             create=(target/'.opencode/commands/book-chapter-brief.md').read_text(encoding='utf-8')
             edit=(target/'.opencode/commands/book-chapter-brief-edit.md').read_text(encoding='utf-8')
             chapter=(target/'.opencode/commands/book-chapter.md').read_text(encoding='utf-8')
-            self.assertIn('énoncé complet',create)
+            self.assertIn('aucune correction ni solution',create)
+            self.assertIn('plan éditorial intermédiaire',create)
             self.assertIn('supprimer',edit)
             self.assertIn('APPROVED',chapter)
             self.assertTrue((target/'.opencode/commands/scriptable-book-chapter-brief.md').is_file())
@@ -151,7 +152,8 @@ class GeneratorTests(unittest.TestCase):
             cp=subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','init','--chapter','CH001'],text=True,capture_output=True)
             self.assertEqual(cp.returncode,0,cp.stdout+cp.stderr)
             brief=target/'languages/fr-FR/chapter-briefs/CH001.md'
-            self.assertIn('Énoncé complet destiné au lecteur',brief.read_text(encoding='utf-8'))
+            self.assertIn('Énoncé destiné au lecteur',brief.read_text(encoding='utf-8'))
+            self.assertNotIn('Corrigé attendu / solution de référence',brief.read_text(encoding='utf-8'))
             cp2=subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','init','--chapter','CH001'],text=True,capture_output=True)
             self.assertEqual(cp2.returncode,3)
             cp3=subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','list'],text=True,capture_output=True)
@@ -168,6 +170,73 @@ class GeneratorTests(unittest.TestCase):
             cp=subprocess.run(['python3',str(target/'scripts/validate_project.py'),'--root',str(target)],text=True,capture_output=True)
             self.assertEqual(cp.returncode,1,cp.stdout+cp.stderr)
             self.assertIn('no detailed brief',cp.stdout)
+
+    def test_generated_project_contains_multiplatform_python_environment_scripts_and_tutorial(self):
+        with tempfile.TemporaryDirectory() as td:
+            target=Path(td)/'book'; bookgen.build_project(self.config(td),target)
+            for name in ['scripts/setup_venv.sh','scripts/setup_venv.bat','scripts/setup_venv.ps1',
+                         'scripts/install.sh','scripts/install.bat','scripts/install.ps1',
+                         'scripts/run_python.sh','scripts/run_python.bat','scripts/run_python.ps1',
+                         'scripts/requirements.txt','scripts/platform/run-opencode.sh',
+                         'scripts/platform/run-opencode.bat','scripts/platform/run-opencode.ps1']:
+                self.assertTrue((target/name).is_file(),name)
+            readme=(target/'README.md').read_text(encoding='utf-8')
+            for marker in ['Étape 1 : prérequis et installation','Étape 4 : préparer puis approuver les briefs synthétiques',
+                           'Étape 10 : compiler les livrables','scripts/run_python.sh','scripts/install.bat']:
+                self.assertIn(marker,readme)
+            self.assertIn('💡 Explication imagée',(target/'prompts/writing/CHAPTER.md').read_text(encoding='utf-8'))
+            import subprocess
+            for shell_script in target.rglob('*.sh'):
+                cp=subprocess.run(['bash','-n',str(shell_script)],text=True,capture_output=True)
+                self.assertEqual(cp.returncode,0,f'{shell_script}: {cp.stderr}')
+
+    def test_chapter_brief_approval_requires_explicit_flag_and_updates_index(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as td:
+            target=Path(td)/'book'; bookgen.build_project(self.config(td),target)
+            helper=target/'scripts/chapter_briefs.py'
+            subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','init','--chapter','CH001'],check=True,capture_output=True,text=True)
+            brief=target/'languages/fr-FR/chapter-briefs/CH001.md'
+            body=brief.read_text(encoding='utf-8')
+            body=body.replace('À définir depuis le sommaire','Fondamentaux')
+            body=body.replace('À définir en une ou deux phrases','Comprendre les notions essentielles.')
+            body=body.replace('À définir brièvement','Aucun').replace('À définir','éléments définis').replace('À compléter','complété').replace('À renseigner','fr-FR')
+            body=body.replace('### 2.1 Point à définir','### 2.1 Comprendre la notion centrale')
+            body=body.replace('- **Notions / sous-points :**','- **Notions / sous-points :** définition et application')
+            body=body.replace('- **Intention de traitement (résumé bref, pas le texte final) :**','- **Intention de traitement (résumé bref, pas le texte final) :** présenter les bases et leurs usages')
+            body=body.replace('### VIS-CH001-01 : Type et titre court','Aucun selon la configuration')
+            body=body.replace("### EX-CH001-01 : Titre de l'exercice",'Aucun selon la configuration')
+            body=body.replace('- [ ]','- [x]')
+            brief.write_text(body,encoding='utf-8')
+            refused=subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','approve','--chapter','CH001'],text=True,capture_output=True)
+            self.assertEqual(refused.returncode,5)
+            approved=subprocess.run(['python3',str(helper),'--root',str(target),'--lang','fr-FR','--action','approve','--chapter','CH001','--confirm-approval'],text=True,capture_output=True)
+            self.assertEqual(approved.returncode,0,approved.stdout+approved.stderr)
+            self.assertIn('`APPROVED`',brief.read_text(encoding='utf-8'))
+            self.assertIn('| CH001 | CH001.md | APPROVED |',(target/'languages/fr-FR/chapter-briefs/INDEX.md').read_text(encoding='utf-8'))
+
+    def test_assembler_refuses_outline_only_chapter(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as td:
+            target=Path(td)/'book'; bookgen.build_project(self.config(td),target)
+            (target/'languages/fr-FR/chapters/CH001.md').write_text('# Chapitre vide\n\n- Point à développer\n',encoding='utf-8')
+            cp=subprocess.run(['python3',str(target/'scripts/assemble.py'),'--root',str(target),'--lang','fr-FR'],text=True,capture_output=True)
+            self.assertEqual(cp.returncode,6,cp.stdout+cp.stderr)
+            self.assertIn('without prose paragraphs',cp.stderr)
+            self.assertFalse((target/'languages/fr-FR/manuscript/MANUSCRIPT.md').exists())
+
+    def test_validator_warns_when_chapter_is_only_an_outline(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as td:
+            target=Path(td)/'book'; bookgen.build_project(self.config(td),target)
+            briefdir=target/'languages/fr-FR/chapter-briefs'; briefdir.mkdir(exist_ok=True)
+            brief=(target/'templates/chapters/CHAPTER_BRIEF_TEMPLATE.md').read_text(encoding='utf-8').replace('CHXXX','CH001').replace('À renseigner','fr-FR').replace('`DRAFT`','`APPROVED`')
+            (briefdir/'CH001.md').write_text(brief,encoding='utf-8')
+            (target/'languages/fr-FR/chapters/CH001.md').write_text('# Chapitre 1\n\n- Définition\n- Exemple\n',encoding='utf-8')
+            cp=subprocess.run(['python3',str(target/'scripts/validate_project.py'),'--root',str(target)],text=True,capture_output=True)
+            self.assertEqual(cp.returncode,0,cp.stdout+cp.stderr)
+            self.assertIn('only',cp.stdout)
+            self.assertIn('no prose paragraphs',cp.stdout)
 
     def test_language_catalogs_are_per_language(self):
         files=bookgen.make_language_files('es-ES',self.config('/tmp'),False)
