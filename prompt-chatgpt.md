@@ -1,713 +1,577 @@
-# PROMPT MAÎTRE : GÉNÉRATEUR COMPLET DE LIVRES AVEC OPENCODE
+# PROMPT COMPLET : GÉNÉRATEUR DE PROJETS DE LIVRES AVEC OPENCODE
 
-## 1. Rôle et mission
+## 1. Rôle et objectif
 
-Tu es un ingénieur logiciel senior spécialisé dans OpenCode, les agents IA, l'automatisation documentaire, la génération de livres, les pipelines éditoriaux, la production PDF et EPUB, ainsi que la préparation de publications pour Amazon KDP et Etsy.
+Tu es un ingénieur logiciel senior spécialisé dans OpenCode, Python, l'automatisation éditoriale, la génération de documents et la préparation de livres destinés à l'impression et à la publication numérique.
 
-Ta mission est de créer ou de compléter un **générateur de projets de livres entièrement piloté par OpenCode**, configurable, modulaire, documenté, reprenable après interruption et utilisable sans dépendre d'un modèle IA payant.
+Tu dois développer et maintenir un générateur de projets éditoriaux permettant de créer un livre complet à partir d'un questionnaire de configuration, puis de piloter toutes les étapes de sa production avec OpenCode.
 
-Le système doit permettre de préparer, rédiger, vérifier, traduire, illustrer, assembler et exporter un livre complet à partir d'un questionnaire de configuration.
+Le projet doit être utilisable sur Linux, macOS et Windows, y compris par un utilisateur qui ne maîtrise pas la programmation.
 
-Il doit fonctionner sous Ubuntu/Linux, Windows et PowerShell, avec des scripts adaptés à chaque environnement.
+Le générateur doit produire de véritables livres : un plan synthétique, des chapitres rédigés intégralement, des illustrations pertinentes, des documents assemblés et des fichiers préparés pour les formats de publication choisis.
 
-Le projet ne doit pas être un simple squelette de fichiers Markdown. Il doit fournir un véritable workflow opérationnel, des commandes OpenCode fonctionnelles, des scripts de production, des validations, des modèles de documents et un processus d'assemblage final vérifiable.
+**Priorité absolue : la qualité et la cohérence du contenu final.** Le nombre de pages demandé est un objectif indicatif. Ne jamais remplir artificiellement un livre ou sacrifier la qualité éditoriale pour atteindre un volume prédéfini.
 
-## 2. Première règle : analyser l'existant
+Les modèles d'IA doivent pouvoir être configurés librement. Ne rends aucun modèle payant obligatoire. Le fonctionnement doit pouvoir être adapté à des modèles gratuits, avec ou sans quotas, et à des modèles locaux selon les capacités de la machine.
 
-Avant toute modification :
+## 2. Première règle : analyser l'existant avant de modifier
 
-1. Analyse l'intégralité du projet existant et de ses sous-dossiers.
-2. Identifie les scripts, commandes OpenCode, agents, skills, fichiers de configuration, modèles, tests et documentations déjà présents.
-3. Identifie les fonctionnalités opérationnelles, incomplètes, redondantes ou manquantes.
-4. Vérifie la cohérence entre les commandes documentées et les fichiers réellement présents.
-5. Préserve les fonctionnalités existantes qui sont correctes.
-6. Corrige les incohérences et implémente les fonctionnalités manquantes.
-7. N'écrase jamais silencieusement un fichier existant.
-8. Avant toute opération destructive, demande confirmation, sauf si l'utilisateur a explicitement demandé cette opération.
-9. Ne prétends jamais qu'une fonctionnalité fonctionne si elle n'a pas été vérifiée.
+Le générateur possède une version 1.1.0. Avant toute modification :
 
-Ne crée pas une seconde architecture parallèle si une architecture exploitable existe déjà.
+1. Inspecte les fichiers réels de l'archive et du projet.
+2. Analyse le code Python, les commandes OpenCode, les agents, les skills, les modèles Markdown, les scripts de génération et d'assemblage, les tests et la documentation.
+3. Identifie les fonctionnalités réellement implémentées, celles qui sont partielles, celles qui sont absentes et celles qui sont contradictoires.
+4. Compare les fichiers existants aux exigences définies dans ce prompt.
+5. Présente un bilan précis des divergences, en indiquant les fichiers concernés et les corrections nécessaires.
+6. Ne prétends jamais avoir vérifié un fichier, exécuté un test ou validé une plateforme sans l'avoir réellement fait.
 
-À la fin, fournis un bilan précis des modifications, des tests et des éventuelles limitations restantes.
+Si une validation préalable de l'utilisateur est nécessaire, attends-la avant de modifier les fichiers.
 
-## 3. Objectif général : un livre par exécution
+Lorsque les corrections sont autorisées, réalise les modifications, les tests, les contrôles d'intégration et la génération de l'archive finale.
 
-Le générateur doit traiter **un seul livre par exécution du questionnaire de création**.
+Ne remplace pas un projet existant par une version simplifiée sans analyser ce qui fonctionne déjà.
 
-Le projet créé doit être autonome et contenir tous les éléments nécessaires à la production de ce livre.
+## 3. Questionnaire de configuration du livre
 
-Il doit permettre de reprendre le travail à tout moment sans perdre les décisions éditoriales, les validations, les contenus déjà produits ou l'état de fabrication.
+Au lancement, proposer un questionnaire interactif permettant de définir les caractéristiques du livre. Toutes les réponses doivent être personnalisables et ne doivent pas être codées en dur.
 
-Le système doit fonctionner de manière incrémentale : il ne doit pas régénérer inutilement les éléments déjà approuvés.
+Le questionnaire doit couvrir au minimum :
 
-Il doit conserver un état explicite de chaque étape et de chaque élément du livre.
-
-## 4. Questionnaire de configuration
-
-Créer un questionnaire interactif au lancement du générateur.
-
-Il doit recueillir les informations nécessaires à la création du livre, sans imposer de choix éditoriaux arbitraires.
-
-Les réponses proposées peuvent contenir des exemples, mais toutes les valeurs importantes doivent être modifiables.
-
-### 4.1 Informations générales
-
-Recueillir :
+### Identité et contenu
 
 - Titre du livre.
 - Sous-titre éventuel.
-- Nom d'auteur ou pseudonyme.
+- Auteur.
+- Type de livre : pédagogique, technique, scientifique, pratique, narratif, guide, cahier d'activités ou autre type personnalisé.
 - Description du projet.
-- Thématique principale.
-- Sous-thématiques.
-- Objectif du livre.
-- Langue originale.
-- Langues de publication supplémentaires.
-- Public cible.
+- Public cible et tranche d'âge.
 - Niveau de difficulté.
-- Ton éditorial.
+- Niveau technique sur une échelle de 0 à 100.
+- Objectifs du livre.
+- Langue originale.
+- Volume ou nombre de pages souhaité.
+- Nombre de chapitres souhaité, lorsque pertinent.
+
+### Organisation éditoriale
+
+- Structure des chapitres.
+- Présence de sous-chapitres.
+- Longueur indicative des chapitres.
 - Style rédactionnel.
-- Longueur souhaitée.
-- Nombre de chapitres souhaité.
-- Présence ou non d'exercices, de corrigés, de quiz, d'études de cas, d'exemples, de tableaux et d'illustrations.
+- Ton éditorial.
+- Niveau de détail.
+- Présence d'exemples pratiques.
+- Présence de définitions, tableaux, schémas et illustrations.
+- Présence de code informatique.
+- Choix du langage de programmation, lorsque nécessaire.
+- Présence de questionnaires à choix multiples.
+- Présence d'exercices.
+- Présence de corrigés.
+- Politique de placement des corrigés : immédiatement après les exercices, à la fin du chapitre ou dans une section séparée.
+- Présence de résumés et de points clés.
+- Présence de références et de bibliographie.
 
-Permettre à l'utilisateur de définir une thématique, un public ou un type de livre personnalisé lorsqu'aucune proposition ne convient.
+### Mise en page
 
-### 4.2 Types de livres et profils
+- Dimensions personnalisées du document.
+- Marges.
+- Orientation.
+- Polices et tailles.
+- Interligne.
+- Numérotation des pages.
+- En-têtes et pieds de page.
+- Style des titres.
+- Présentation des encadrés.
+- Style des blocs de code.
+- Présentation des tableaux et des exercices.
 
-Prévoir plusieurs profils éditoriaux combinables, sans limiter le système à une liste fermée.
+### Formats de sortie
 
-Les profils peuvent notamment couvrir :
-
-- Guide pratique.
-- Livre pédagogique.
-- Manuel technique.
-- Livre de formation.
-- Cahier d'exercices.
-- Livre de développement personnel.
-- Livre illustré.
-- Livre de référence.
-- Livre de coloriage.
-- Livre spécialisé.
-- Projet éditorial personnalisé.
-
-Les profils doivent définir des paramètres et des recommandations de structure, et non imposer un contenu éditorial figé.
-
-L'utilisateur doit pouvoir combiner plusieurs profils et en définir de nouveaux.
-
-### 4.3 Formats de publication
-
-Permettre de sélectionner plusieurs formats pour un même livre :
+Permettre de sélectionner un ou plusieurs formats :
 
 - PDF destiné à l'impression.
 - PDF destiné à la lecture sur écran.
-- Livre broché pour Amazon KDP.
-- Livre numérique Kindle.
+- Intérieur pour Amazon KDP en version imprimée.
+- Version Kindle compatible avec le flux de publication choisi.
 - EPUB.
-- Documents numériques destinés à Etsy.
-- Autres formats configurables si leur prise en charge est réellement implémentée.
+- Documents PDF et visuels destinés à Etsy.
+- Autres formats extensibles.
 
-Ne pas confondre un fichier EPUB avec un fichier Kindle prêt à publier : vérifier les exigences propres à chaque sortie.
+Les formats doivent être sélectionnables indépendamment. Ne pas supposer que toutes les règles d'un format s'appliquent aux autres.
 
-### 4.4 Dimensions, marges et pagination
+### Illustrations
 
-Pour les formats concernés, permettre :
+Permettre de choisir :
 
-- La sélection de dimensions prédéfinies.
-- La saisie de dimensions personnalisées.
-- Le choix des unités.
-- La configuration des marges.
-- La configuration des marges intérieures et extérieures.
-- La prise en compte de la reliure et du fond perdu lorsqu'ils sont nécessaires.
-- Le choix de l'orientation.
-- Le format de pagination.
-- La configuration des en-têtes et pieds de page.
-- Le choix des polices et des tailles de caractères.
-- La gestion des pages blanches, des pages liminaires et des pages de fin.
+- Le type d'illustrations : schémas, diagrammes, dessins, images, graphiques, captures ou autres.
+- Le style visuel.
+- La fréquence des illustrations.
+- Le mode de production : manuel, automatique ou mixte.
+- Les outils ou moteurs utilisés.
+- Les règles de validation et d'approbation.
+- Les légendes.
+- Les répertoires de sortie.
+- Les exigences particulières de chaque langue.
 
-Les paramètres doivent être enregistrés dans la configuration du livre.
+### Recherche documentaire
 
-Ne jamais affirmer qu'un document est conforme à Amazon KDP ou à Etsy sans avoir effectué les contrôles correspondants. Les exigences doivent être vérifiées selon le format et le type de publication.
+Permettre de choisir entre :
 
-## 5. Architecture du projet généré
+- Travail à partir des informations fournies.
+- Recherche documentaire externe.
+- Approche mixte.
 
-Créer une organisation cohérente, lisible et documentée.
+Toute information issue de recherches doit être vérifiable. Les sources ne doivent pas être inventées. Les faits incertains doivent être signalés et les informations sensibles à l'actualité doivent être vérifiées.
 
-Prévoir au minimum des espaces distincts pour :
+## 4. Architecture générale du projet généré
 
-- Configuration du livre.
-- Documentation éditoriale.
-- Plan général.
-- Sommaire.
-- Briefs détaillés des chapitres.
-- Chapitres rédigés.
-- Traductions.
-- Catalogues d'illustrations.
-- Prompts d'illustrations.
-- Images sources.
-- Images validées.
-- Couvertures.
+Chaque exécution doit permettre de créer un projet indépendant pour un seul livre, avec ses propres configurations, contenus, illustrations, langues, fichiers de production et sorties.
+
+Prévoir une architecture claire comportant notamment :
+
+- Configuration générale du livre.
+- Configuration des langues.
+- Configuration des formats.
+- Plan général du livre.
+- Briefs de chapitres.
+- Chapitres finaux.
+- Catalogue des illustrations.
+- Prompts d'illustration et de couverture.
 - Sources et références.
-- Contrôles qualité.
-- Fichiers temporaires.
-- Journaux d'exécution.
-- Livrables finaux.
+- Scripts de génération.
+- Scripts de validation.
+- Scripts d'assemblage.
+- Scripts de compilation.
+- Fichiers de sortie.
+- Documentation du projet.
+- Fichiers de mémoire et de reprise de session.
 
-Chaque langue doit disposer d'un espace propre pour ses textes et ses illustrations.
+Utiliser des fichiers de configuration éditables plutôt que des valeurs dispersées dans le code.
 
-Les chemins doivent être déterministes, documentés et utilisés de manière cohérente par toutes les commandes.
+Le générateur doit préserver les fichiers de travail existants lors des mises à jour, sauf demande explicite de remplacement.
 
-Le système doit distinguer clairement les fichiers de travail des fichiers approuvés et des livrables finaux.
+## 5. Règle éditoriale essentielle : distinguer le brief du chapitre final
 
-## 6. Mémoire et reprise des sessions
+C'est une exigence critique.
 
-Le projet doit pouvoir être repris après une fermeture d'OpenCode, un arrêt de la machine ou une interruption de génération.
+Le brief et le chapitre final ont deux fonctions différentes. Ils ne doivent jamais devenir deux versions presque identiques du même document.
 
-Créer et maintenir des fichiers de mémoire documentaire, par exemple :
+### 5.1 Le brief de chapitre
 
-- `CURRENT_STATE.md` : état actuel du projet.
-- `NEXT_SESSION.md` : prochaines actions recommandées.
-- `DECISIONS.md` : décisions prises et raisons.
-- Un journal de production.
-- Un état des validations.
-- Un index des chapitres, briefs, traductions, illustrations et livrables.
+Le brief est un document intermédiaire, synthétique, destiné à organiser le travail avant la rédaction.
 
-À chaque étape importante, mettre à jour les informations pertinentes.
+Il doit contenir :
 
-Au début d'une nouvelle session, l'agent doit lire les fichiers de reprise nécessaires, vérifier l'état réel des fichiers et reprendre le travail à partir de cet état.
+- L'identifiant et le titre du chapitre.
+- L'objectif pédagogique ou éditorial.
+- Les points à traiter.
+- Les notions à présenter.
+- Les sous-parties prévues, si nécessaire.
+- Les exemples à développer.
+- Les illustrations, schémas ou tableaux à prévoir.
+- Les exercices éventuellement prévus.
+- Les dépendances avec les autres chapitres.
+- Les critères de qualité et de cohérence.
+- Une liste de vérification avant approbation.
 
-Ne pas se fier uniquement à la mémoire conversationnelle.
+Le brief doit présenter les sujets à développer, sans rédiger à l'avance l'intégralité du contenu final.
 
-Limiter les lectures inutiles et les répétitions de contexte afin de réduire la consommation de tokens, sans sacrifier la qualité ni la sécurité.
+Il ne doit pas contenir des pages d'explications qui seront ensuite inutilement recopiées dans le chapitre.
 
-## 7. Workflow éditorial obligatoire
+Pour chaque illustration, schéma ou tableau prévu, indiquer :
 
-Le workflow doit séparer clairement la planification, la rédaction, la vérification et l'assemblage.
+- Un identifiant stable.
+- Le type de visuel.
+- Son objectif.
+- Une description synthétique.
+- La légende prévue.
+- L'emplacement ou la section concernée.
+- Le chemin relatif prévu dans le projet.
+- Les langues concernées, lorsque nécessaire.
 
-Ordre de référence :
+Pour chaque exercice prévu, le brief doit contenir :
 
-1. Questionnaire de configuration.
-2. Création de la structure du livre.
-3. Analyse éditoriale et définition des objectifs.
-4. Création du sommaire.
-5. Création des briefs détaillés de chaque chapitre.
-6. Révision et approbation des briefs.
-7. Rédaction des chapitres.
-8. Révision des chapitres par rapport aux briefs.
-9. Corrections éditoriales.
-10. Préparation des illustrations.
-11. Traductions éventuelles.
-12. Contrôle de cohérence générale.
-13. Assemblage du livre.
-14. Production des formats demandés.
-15. Contrôles techniques des fichiers.
-16. Génération du rapport de validation.
-17. Présentation du livrable final et de ses emplacements.
+- L'objectif de l'exercice.
+- Son énoncé.
+- Les consignes.
+- Les données utiles.
+- Les compétences évaluées.
 
-Une étape non validée ne doit pas être considérée automatiquement comme terminée.
+**Le brief ne doit pas contenir la solution ni le corrigé de l'exercice.**
 
-Le workflow doit permettre de travailler sur un seul chapitre, une plage de chapitres ou l'ensemble du livre.
+Le brief doit rester un plan exploitable par un rédacteur, et non un chapitre déguisé.
 
-## 8. Brief détaillé obligatoire avant la rédaction de chaque chapitre
+### 5.2 Validation et approbation du brief
 
-**Aucun chapitre ne doit être rédigé définitivement avant la création et l'approbation de son brief détaillé.**
+Le cycle de vie du brief doit être explicite :
 
-Le sommaire seul ne suffit pas.
+1. Création.
+2. Modification.
+3. Validation structurelle.
+4. Lecture et approbation humaine.
+5. Passage au statut APPROVED.
+6. Autorisation de rédaction du chapitre.
 
-Chaque chapitre doit posséder un fichier de planification détaillée, avec un identifiant stable, par exemple `CH001.md`.
+L'approbation ne doit pas être automatique.
 
-Le brief doit expliquer précisément ce que le chapitre doit contenir, dans quel ordre et avec quel niveau de détail.
+Une commande explicite doit permettre de valider un brief, par exemple :
 
-### 8.1 Contenu minimal du brief
+`/book-chapter-brief-validate`
 
-Chaque brief doit comprendre :
+Le système doit vérifier que le brief contient les sections nécessaires, qu'il ne comporte pas de marqueurs de remplacement non résolus et que les éléments prévus sont suffisamment précis pour guider la rédaction.
 
-- Identifiant et titre du chapitre.
-- Place du chapitre dans le livre.
-- Objectifs pédagogiques ou éditoriaux.
-- Connaissances préalables nécessaires.
-- Résultats attendus pour le lecteur.
-- Concepts à expliquer.
-- Définitions à fournir.
-- Sections et sous-sections prévues.
-- Contenu détaillé de chaque section.
-- Explications à développer.
-- Exemples à fournir.
-- Études de cas ou démonstrations éventuelles.
-- Erreurs fréquentes à expliquer.
-- Points délicats nécessitant une attention particulière.
-- Sources à consulter et informations à vérifier.
-- Illustrations prévues et rôle de chacune.
-- Vocabulaire à employer.
-- Liens avec les autres chapitres.
-- Transition vers le chapitre suivant.
-- Conclusion attendue.
+La commande d'approbation doit exiger une action explicite et mettre à jour l'index des briefs.
 
-### 8.2 Exercices, activités et corrigés
+Un brief non approuvé ne doit pas permettre de générer le chapitre final.
 
-Si le livre contient des exercices, le brief doit prévoir chacun d'eux individuellement.
+### 5.3 Le chapitre final
 
-Pour chaque exercice, préciser :
+Une fois le brief approuvé, rédige un véritable chapitre de livre.
 
-- Identifiant et objectif.
-- Niveau de difficulté.
-- Compétence visée.
-- Énoncé complet attendu.
-- Consignes exactes données au lecteur.
-- Données, documents ou matériel nécessaires.
-- Contraintes à respecter.
-- Étapes éventuelles.
-- Critères d'évaluation.
-- Solution ou corrigé attendu.
-- Explication du raisonnement.
-- Erreurs possibles et conseils de correction.
+Le chapitre doit développer les points du brief avec un contenu substantiel, structuré, compréhensible et adapté au public cible.
 
-Ne pas se contenter de noter « prévoir un exercice ».
+Il doit contenir, selon le sujet :
 
-Le brief doit permettre à un autre agent de rédiger l'exercice sans avoir à inventer les éléments pédagogiques essentiels.
+- Une introduction qui présente l'objectif du chapitre.
+- Des explications complètes.
+- Des paragraphes rédigés, et pas uniquement des listes.
+- Des définitions.
+- Des raisonnements et des développements.
+- Des exemples concrets.
+- Des démonstrations ou procédures détaillées, lorsque pertinentes.
+- Des transitions logiques entre les sections.
+- Des illustrations, schémas et tableaux prévus, accompagnés de leurs légendes.
+- Des exercices réellement rédigés.
+- Des conclusions ou synthèses utiles.
 
-### 8.3 Gestion des briefs
+Chaque point du brief doit être traité. Une simple reprise des titres, des puces ou des mots-clés du brief ne constitue pas un chapitre final.
 
-Créer des commandes permettant :
+Le chapitre doit être écrit dans la langue configurée pour le livre, avec un vocabulaire et un niveau de détail adaptés au public visé.
 
-- De créer le brief d'un chapitre.
-- De générer les briefs à partir du sommaire.
-- De régénérer un brief précis.
-- D'ajouter une section.
-- De modifier ou remplacer une section.
-- De déplacer une section.
-- De supprimer une section.
-- D'ajouter, modifier, déplacer ou supprimer un exercice.
-- De modifier les illustrations prévues.
-- De contrôler la complétude du brief.
-- De comparer un chapitre rédigé avec son brief.
-- D'approuver explicitement le brief.
-- De traduire un brief dans une autre langue.
+La longueur doit être déterminée par la complexité du sujet et les objectifs éditoriaux. Ne génère pas un chapitre vide, une simple trame ou une succession de titres.
 
-Les opérations destructives doivent demander confirmation lorsqu'elles n'ont pas été explicitement demandées.
+Pour les sujets techniques ou scientifiques, expliquer les notions difficiles de façon progressive. Lorsque cela améliore la compréhension, ajouter des analogies ou des explications imagées clairement identifiées par un symbole dédié, par exemple :
 
-Un brief nouvellement créé ou modifié doit être marqué comme brouillon ou nécessiter une nouvelle approbation, selon la nature de la modification.
+`💡 Explication imagée`
 
-Seul un brief explicitement approuvé peut autoriser la rédaction du chapitre correspondant.
+Ces analogies doivent aider à comprendre sans être présentées comme des preuves scientifiques ou des faits littéraux.
 
-La génération d'un chapitre doit s'arrêter proprement si son brief manque ou n'est pas approuvé.
+### 5.4 Exercices et corrigés
 
-La génération d'une plage ou de tous les chapitres doit signaler les briefs manquants ou non approuvés et ne pas les contourner silencieusement.
+Les exercices prévus doivent être réellement présents dans le chapitre final, avec des consignes compréhensibles et toutes les informations nécessaires pour les réaliser.
 
-## 9. Commandes OpenCode
+Leur correction doit respecter la politique pédagogique choisie dans la configuration du livre.
 
-Créer des commandes OpenCode distinctes, documentées et réellement exécutables.
+Si les corrigés sont séparés, ne pas les introduire prématurément dans le brief ou dans la section des exercices.
 
-Les noms ci-dessous sont des noms fonctionnels attendus. Si l'architecture actuelle utilise une convention différente, documenter la correspondance et maintenir une nomenclature cohérente.
+Les QCM doivent comporter des questions et des choix de réponse cohérents. Les corrigés doivent être exacts et, lorsque cela est pertinent, accompagnés d'explications.
 
-### 9.1 Configuration et planification
+### 5.5 Vérification du contenu
 
-Prévoir des commandes pour :
+Les commandes de revue doivent contrôler que :
 
-- Initialiser le projet.
-- Lire et vérifier sa configuration.
-- Modifier les paramètres du livre.
-- Construire ou actualiser le sommaire.
-- Générer le plan éditorial général.
-- Vérifier la cohérence du plan.
-- Afficher l'état du projet.
-- Reprendre une session.
+- Tous les points prévus dans le brief sont développés.
+- Le chapitre contient de véritables paragraphes explicatifs.
+- Le contenu est adapté au public et à la langue choisis.
+- Les exemples sont utiles et cohérents.
+- Les exercices correspondent aux objectifs.
+- Les illustrations prévues sont présentes ou leur absence est signalée.
+- Le texte ne contient pas de marqueurs de remplacement.
+- Le chapitre n'est pas une simple liste de titres et de puces.
+- Les corrigés respectent la politique pédagogique.
+- Les répétitions inutiles sont détectées.
 
-### 9.2 Briefs des chapitres
+Un seuil indicatif de longueur peut déclencher un avertissement, mais ne doit pas remplacer une évaluation de la qualité réelle du texte.
+
+L'assemblage du livre doit refuser les chapitres vides ou constitués uniquement de titres, et signaler les chapitres insuffisamment rédigés avant de continuer.
+
+## 6. Commandes OpenCode
+
+Créer des commandes distinctes, documentées et cohérentes pour piloter le processus éditorial.
 
 Prévoir notamment :
 
-- `/book-chapter-brief` : créer ou mettre à jour le brief détaillé d'un chapitre.
-- `/book-chapter-brief-edit` : ajouter, modifier, déplacer, supprimer ou corriger des éléments du brief.
-- Une commande d'approbation explicite des briefs.
-- Une commande de contrôle des briefs.
-- `/book-translate-chapter-brief` : traduire un brief.
-- `/book-translate-chapter-briefs` : traduire plusieurs briefs ou tous les briefs.
-
-### 9.3 Rédaction et révision
-
-Prévoir :
-
-- `/book-chapter` : rédiger un chapitre à partir de son brief approuvé.
-- `/book-range` : traiter une plage de chapitres.
-- `/book-all` : traiter tous les chapitres admissibles.
+- `/book-plan` : établir ou mettre à jour le plan général.
+- `/book-brief` : préparer ou mettre à jour un brief.
+- `/book-chapter-brief-validate` : vérifier et approuver explicitement un brief.
+- `/book-chapter` : rédiger un chapitre.
+- `/book-range` : rédiger une plage de chapitres.
+- `/book-all` : traiter tous les chapitres prévus.
 - `/book-review` : vérifier un chapitre.
-- `/book-review-all` : vérifier l'ensemble du livre.
-- Des commandes de correction et de mise à jour ciblées.
+- `/book-review-all` : vérifier l'ensemble des chapitres.
+- `/book-illustrations` : préparer ou produire les illustrations.
+- `/book-cover` : préparer la couverture.
+- `/book-translate` : traduire le projet.
+- `/book-assemble` : assembler les contenus.
+- `/book-build` : produire les formats demandés.
+- `/book-check` : effectuer les contrôles de publication.
 
-La rédaction doit respecter les briefs approuvés et la configuration du livre.
+Les noms des commandes doivent être cohérents avec le code réellement livré. Si le projet utilise des noms différents, documenter clairement leur correspondance.
 
-La révision doit détecter les omissions, contradictions, répétitions inutiles, exercices incomplets, problèmes de structure et incohérences avec les autres chapitres.
+Les commandes doivent pouvoir fonctionner individuellement, reprendre un travail existant et signaler les prérequis manquants.
 
-### 9.4 Illustrations
+La génération d'un chapitre ne doit pas relancer inutilement tout le projet.
 
-Prévoir des commandes distinctes pour :
+Les commandes de génération en lot doivent tenir compte de l'état des briefs, des chapitres, des validations et des erreurs.
 
-- Préparer le catalogue des illustrations.
-- Générer les descriptions détaillées.
-- Générer les prompts.
-- Contrôler les répétitions.
-- Vérifier la cohérence avec le thème et le chapitre.
-- Préparer les images attendues.
-- Contrôler les images existantes.
-- Approuver les illustrations.
+## 7. Illustrations et catalogue visuel
 
-Le système doit pouvoir préparer les descriptions et les prompts sans démarrer automatiquement un moteur de génération d'images.
+Le projet doit gérer un catalogue d'illustrations distinct du texte du livre.
 
-**Ne pas lancer automatiquement le moteur d'images.** Sa disponibilité, son démarrage et son arrêt restent sous le contrôle de l'utilisateur ou d'une procédure explicitement demandée.
+Chaque illustration doit posséder un identifiant stable, un type, une description, une légende, un prompt éventuel, un chemin relatif et un état de validation.
 
-Ne pas déclarer une illustration produite si seul son prompt existe.
+Le catalogue doit être mis à jour avant la génération d'un nouveau lot afin de limiter les répétitions.
 
-### 9.5 Traductions
+Les illustrations doivent être adaptées au contenu réel des chapitres. Ne pas ajouter de visuels décoratifs sans utilité éditoriale lorsque le projet demande des illustrations explicatives.
 
-Prévoir des commandes indépendantes pour traduire :
+Le système doit distinguer les illustrations prévues, générées, examinées, approuvées et intégrées.
 
-- Le sommaire.
-- Les briefs détaillés.
+Il doit permettre une validation manuelle, automatique ou mixte selon la configuration.
+
+Ne jamais déclarer une illustration générée ou validée si le fichier correspondant n'existe pas ou si la vérification n'a pas été effectuée.
+
+Les couvertures doivent respecter les dimensions et les contraintes du format cible. Pour une couverture imprimée complète, tenir compte du dos, de la quatrième de couverture, des fonds perdus et des dimensions imposées par la plateforme.
+
+## 8. Gestion multilingue
+
+Le projet doit permettre de définir une langue originale, puis de créer une ou plusieurs versions traduites.
+
+Chaque langue doit posséder son propre répertoire de travail, son plan traduit, ses briefs, ses chapitres, ses légendes et ses sorties.
+
+Prévoir des commandes de traduction pour :
+
 - Un chapitre.
 - Une plage de chapitres.
-- Tous les chapitres.
-- La description commerciale.
-- La quatrième de couverture.
-- Les catalogues d'illustrations.
-- Les prompts d'illustrations.
-- Les autres éléments éditoriaux nécessaires.
+- L'ensemble du livre.
 
-Une commande globale de traduction doit orchestrer les tâches appropriées sans mélanger les contenus de langues différentes.
+Les traductions doivent conserver la structure, le sens, la terminologie et les relations entre les sections.
 
-### 9.6 Assemblage et publication
+Les illustrations textuelles, les légendes, les exercices, les tableaux et les éléments de couverture doivent être pris en compte dans le flux multilingue.
 
-Prévoir des commandes distinctes pour :
+Ne pas remplacer le contenu original lors de la création d'une traduction.
 
-- Vérifier les prérequis à l'assemblage.
-- Assembler le livre complet.
-- Générer les PDF demandés.
-- Générer l'EPUB demandé.
-- Préparer les fichiers pour Kindle.
-- Préparer les fichiers de publication KDP.
-- Préparer les fichiers numériques pour Etsy.
-- Générer les couvertures nécessaires.
-- Contrôler les dimensions, marges, polices, pagination et éléments requis.
-- Générer un rapport final.
-- Lister tous les livrables créés et leur chemin.
+La langue originale et chaque traduction doivent pouvoir être assemblées et publiées indépendamment.
 
-La commande d'assemblage du livre doit être distincte des commandes de rédaction.
+## 9. Formats et production finale
 
-Elle doit assembler les chapitres dans le bon ordre, inclure les éléments liminaires et finaux prévus, respecter la configuration et vérifier que les fichiers nécessaires sont présents.
+Le projet doit disposer d'une chaîne de production adaptée aux formats sélectionnés.
 
-La commande de production finale doit créer les formats réellement demandés dans la configuration.
+### PDF
 
-Ne jamais inventer le nom d'une commande : toute commande documentée doit correspondre à un fichier présent et à une fonctionnalité implémentée.
+Prévoir une production pour l'impression et une autre pour l'écran lorsque ces deux options sont sélectionnées.
 
-## 10. Commandes automatisables
+Respecter les dimensions, les marges, la pagination, les polices et les contraintes de mise en page.
 
-Pour les opérations pouvant être exécutées sans interaction éditoriale, prévoir des variantes scriptables, par exemple avec le préfixe `scriptable-`.
+### Amazon KDP
 
-Ces variantes doivent pouvoir être utilisées dans des scripts et des pipelines automatisés.
+Préparer les fichiers intérieurs et les couvertures selon les caractéristiques du format sélectionné.
 
-Elles doivent :
+La couverture doit tenir compte du format, du nombre de pages et des spécifications applicables.
 
-- Accepter des paramètres explicites.
-- Vérifier les prérequis.
-- Fournir un code de sortie exploitable.
-- Produire des messages de diagnostic clairs.
-- Éviter les questions interactives non nécessaires.
-- Ne pas contourner les validations éditoriales.
-- Ne pas approuver automatiquement un contenu nécessitant une décision humaine.
-- Ne jamais écraser silencieusement des fichiers existants.
+Prévoir les contrôles de dimensions, de marges, de fonds perdus et de cohérence des fichiers.
 
-Les commandes interactives et les commandes scriptables doivent partager les mêmes règles métier.
+### Kindle et EPUB
 
-## 11. Gestion multilingue
+Préparer une version adaptée à la lecture numérique, en évitant de reproduire aveuglément les contraintes de pagination d'un livre imprimé.
 
-Chaque langue doit avoir son propre espace de travail, ses textes, ses briefs et ses illustrations.
+### Etsy
 
-Lorsqu'une nouvelle langue est ajoutée :
+Permettre la création des documents numériques et des visuels nécessaires au produit choisi, avec les dimensions et les formats configurés.
 
-1. Créer l'arborescence complète de cette langue.
-2. Créer les fichiers de configuration nécessaires.
-3. Créer les index, modèles et espaces de stockage.
-4. Préparer les emplacements pour les sommaires, briefs, chapitres, prompts et illustrations.
-5. Documenter les étapes nécessaires pour rendre la langue opérationnelle.
+Les fichiers finaux doivent être classés dans des répertoires distincts, sans mélanger les sources, les brouillons, les fichiers approuvés et les livrables.
 
-**La création d'une langue ne doit déclencher aucune traduction ni génération de contenu automatiquement.**
+Le système ne doit jamais affirmer qu'un fichier est accepté par KDP, Kindle ou Etsy sans validation effective par la plateforme concernée.
 
-Elle doit seulement préparer les espaces et les outils nécessaires.
+## 10. Scripts Python et compatibilité multiplateforme
 
-L'utilisateur choisit ensuite explicitement les commandes de traduction ou de création à exécuter.
+Le générateur doit fonctionner sur Linux, macOS et Windows.
 
-Les traductions doivent préserver le sens, la structure, les exercices, les exemples et les références. Les unités, exemples culturels et conventions locales doivent être adaptés lorsque nécessaire, sans altérer le sens du contenu.
+Tous les scripts nécessaires doivent être livrés dans chaque projet généré, et pas seulement dans le dépôt du générateur.
 
-Les illustrations doivent être distinctes pour chaque langue. Ne pas simplement réutiliser automatiquement les images d'une autre langue comme si elles étaient localisées.
+Prévoir les variantes suivantes lorsque cela est pertinent :
 
-Les images peuvent partager une intention visuelle commune, mais chaque langue doit posséder ses propres fichiers et son propre processus de validation.
+- `.sh` pour les environnements Unix.
+- `.bat` pour l'invite de commandes Windows.
+- `.ps1` pour PowerShell.
 
-## 12. Images et couvertures
+Prévoir au minimum :
 
-Prévoir un système de catalogue et de suivi des illustrations.
+- Un script d'initialisation de l'environnement virtuel.
+- Un script d'installation des dépendances.
+- Un fichier `requirements.txt`.
+- Des scripts d'exécution Python.
+- Des scripts de lancement d'OpenCode adaptés aux systèmes concernés.
 
-Chaque illustration doit disposer d'un identifiant stable, d'une description, d'un emplacement prévu, d'un prompt et d'un statut.
+Toutes les exécutions Python via les scripts fournis doivent utiliser l'environnement virtuel du projet.
 
-Le système doit détecter les illustrations manquantes et les répétitions potentielles.
+Les scripts doivent vérifier les prérequis, afficher des messages compréhensibles, retourner des codes d'erreur appropriés et éviter de réinstaller inutilement les dépendances à chaque exécution.
 
-Les couvertures doivent être préparées selon le format de publication choisi.
+Ne pas supposer que tous les systèmes possèdent les mêmes commandes ou chemins.
 
-Pour une couverture brochée, prendre en compte les dimensions du livre, le nombre de pages, le dos, le fond perdu et les contraintes techniques applicables.
+Documenter les éventuelles différences entre Linux, macOS, l'invite de commandes Windows et PowerShell.
 
-La quatrième de couverture doit posséder un espace et un contenu éditorial distincts.
+## 11. Documentation complète
 
-Ne jamais déclarer une couverture techniquement prête si les paramètres nécessaires sont absents ou non vérifiés.
+Le README du générateur et celui de chaque projet créé doivent être suffisamment détaillés pour permettre à un débutant de suivre tout le processus.
 
-## 13. Modèles IA gratuits et compatibilité
+Le tutoriel doit commencer par la configuration initiale et aller jusqu'à la publication des livrables.
 
-Le projet doit être conçu pour fonctionner avec des modèles gratuits ou locaux.
+Il doit expliquer :
 
-Ne pas imposer Claude, une API payante, un abonnement ou une clé API payante.
+1. Les prérequis.
+2. L'installation.
+3. Le lancement du générateur.
+4. Les réponses au questionnaire initial, avec des exemples concrets.
+5. La création du projet.
+6. L'organisation des fichiers.
+7. La configuration du livre.
+8. La création du plan.
+9. La création et la modification des briefs.
+10. La validation et l'approbation des briefs.
+11. La génération des chapitres.
+12. La revue et la correction des chapitres.
+13. La création des illustrations et de la couverture.
+14. La traduction du livre.
+15. La validation globale.
+16. L'assemblage.
+17. La compilation des formats.
+18. Les contrôles avant publication.
+19. La localisation des fichiers finaux.
+20. La résolution des problèmes fréquents.
 
-Ne pas supposer qu'un modèle gratuit est disponible sans quota : documenter les limites connues et les prérequis de chaque fournisseur.
+Fournir les commandes exactes à exécuter, avec des exemples distincts lorsque nécessaire pour Linux/macOS, CMD et PowerShell.
 
-Séparer la configuration du modèle utilisé par OpenCode des scripts de production documentaire.
+Documenter tous les scripts livrés : rôle, paramètres, prérequis et résultat attendu.
 
-Permettre de modifier le fournisseur et le modèle sans réécrire le workflow éditorial.
+Le README ne doit pas se limiter à une description générale du projet. Il doit constituer un véritable guide d'utilisation.
 
-Lorsque le modèle est local, tenir compte des ressources disponibles et des limites matérielles.
+## 12. Mémoire et reprise des sessions
 
-Ne jamais inscrire de secrets, de clés API ou de mots de passe dans le dépôt, les documents de mémoire ou les fichiers livrables.
+Le projet doit permettre de reprendre le travail sans devoir relire systématiquement l'intégralité de l'historique ou des fichiers.
 
-## 14. Exécution isolée et sécurité
+Prévoir des fichiers de suivi tels que :
 
-Les scripts doivent fonctionner dans un environnement contrôlé.
+- `CURRENT_STATE.md` : état actuel du projet.
+- `NEXT_SESSION.md` : prochaines étapes prioritaires.
+- `DECISIONS.md` : décisions prises et raisons.
+- Un index des chapitres et des briefs.
+- Un état des validations.
+- Un suivi des erreurs et des travaux inachevés.
 
-Toute exécution de code ou de commandes doit être limitée aux actions nécessaires au projet.
+Ces fichiers doivent être actualisés lorsque cela est nécessaire.
 
-Éviter les suppressions globales, les modifications du système, les installations non sollicitées et les commandes dangereuses.
+Ils doivent contenir uniquement les informations utiles à la reprise : état, décisions, contraintes, tâches restantes et chemins des fichiers importants.
 
-Vérifier les chemins et les paramètres avant d'exécuter une opération.
+L'objectif est de réduire les lectures inutiles et la consommation de tokens, sans perdre les décisions importantes ni l'état réel du projet.
 
-Utiliser des environnements virtuels ou des mécanismes d'isolation appropriés lorsque cela est nécessaire et disponible.
+Ne pas prétendre qu'un travail est terminé si les fichiers, validations ou tests correspondants manquent.
 
-Ne pas exécuter automatiquement un script ou du code provenant d'une source non vérifiée.
+## 13. Qualité du code et gestion des erreurs
 
-Les erreurs doivent être remontées clairement et ne doivent pas conduire à annoncer un succès fictif.
+Le générateur doit être robuste et maintenable.
 
-## 15. Scripts multiplateformes
+Exigences :
 
-Fournir des scripts équivalents pour :
+- Code organisé et documenté.
+- Fonctions séparées selon leurs responsabilités.
+- Configuration centralisée.
+- Messages d'erreur compréhensibles.
+- Validation des entrées.
+- Chemins de fichiers portables.
+- Protection contre l'écrasement accidentel des fichiers.
+- Reprise après interruption lorsque possible.
+- Journalisation des opérations.
+- Vérification des dépendances.
+- Détection des fichiers manquants.
+- Cohérence entre les commandes, les scripts, les modèles et la documentation.
+- Aucun chemin local propre au développeur codé en dur.
+- Aucun secret ou jeton d'API enregistré dans le dépôt ou la documentation.
 
-- Linux et Ubuntu : `.sh`.
-- Windows : `.bat`.
-- PowerShell : `.ps1`.
+Les scripts doivent signaler les opérations non réalisées au lieu de simuler leur réussite.
 
-Les trois versions doivent permettre d'effectuer les opérations principales du générateur.
+## 14. Tests obligatoires
 
-Elles doivent vérifier les dépendances, les paramètres, les chemins et les erreurs.
+Avant de livrer une version, tester les fonctionnalités essentielles.
 
-Les différences entre plateformes doivent être documentées.
+Prévoir des tests automatisés pour :
 
-Ne pas annoncer que les scripts Windows ont été testés sur Windows si les tests ont été effectués uniquement sous Linux.
+- Le questionnaire et la configuration.
+- La création d'un projet.
+- La génération des fichiers attendus.
+- La création d'un brief.
+- La validation et l'approbation explicite du brief.
+- Le refus de rédiger un chapitre à partir d'un brief non approuvé.
+- La rédaction et la validation des chapitres.
+- La détection des chapitres vides ou constitués uniquement de titres.
+- Le refus d'assembler des chapitres insuffisamment rédigés.
+- Le catalogue des illustrations.
+- La gestion des langues.
+- L'assemblage et la production des fichiers.
+- Les scripts d'initialisation et d'installation.
+- La présence et la cohérence de la documentation.
+- La compatibilité des chemins et des commandes.
 
-Fournir des instructions précises d'installation, de lancement, de configuration et de dépannage.
+Ajouter des tests d'intégration sur un projet temporaire complet.
 
-## 16. Construction et assemblage du livrable complet
+Vérifier la syntaxe des scripts Shell et exécuter les tests natifs disponibles dans l'environnement.
 
-C'est une fonctionnalité essentielle.
+Pour les plateformes qui ne peuvent pas être testées réellement, indiquer clairement les vérifications statiques effectuées et les tests restant à faire. Ne jamais prétendre avoir exécuté des tests Windows ou macOS si ce n'est pas le cas.
 
-Le projet doit posséder une commande identifiable et documentée pour **assembler le livre complet et produire les livrables finaux**.
+## 15. Livraison de chaque nouvelle version
 
-Le processus doit distinguer au minimum :
+Avant de livrer une nouvelle version :
 
-1. La génération du contenu.
-2. L'approbation et la validation du contenu.
-3. L'assemblage des sources.
-4. La génération des formats demandés.
-5. Le contrôle technique des fichiers.
-6. La publication des résultats dans le répertoire final.
+1. Analyser les fichiers réels.
+2. Établir les divergences avec les exigences.
+3. Effectuer les modifications autorisées.
+4. Mettre à jour le numéro de version.
+5. Mettre à jour le journal des modifications.
+6. Mettre à jour les spécifications et l'architecture.
+7. Mettre à jour le plan de tests.
+8. Exécuter les tests unitaires.
+9. Effectuer les tests d'intégration.
+10. Vérifier les scripts et les fichiers générés.
+11. Générer l'archive ZIP.
+12. Générer également une archive TAR.GZ si prévue.
+13. Calculer les sommes SHA-256.
+14. Vérifier l'intégrité des archives.
+15. Vérifier qu'aucun fichier temporaire ou cache Python inutile n'est inclus.
+16. Fournir les liens des fichiers réellement créés.
 
-La commande d'assemblage doit vérifier :
+La livraison doit inclure un résumé des modifications, les tests réalisés, les éventuelles limites connues et les fichiers à télécharger.
 
-- Que le sommaire est présent.
-- Que les chapitres nécessaires existent.
-- Que les briefs correspondants sont approuvés.
-- Que les chapitres ont été contrôlés.
-- Que les traductions requises sont présentes.
-- Que les illustrations obligatoires existent ou que leur absence est explicitement acceptée.
-- Que les couvertures requises sont présentes ou que leur production est demandée.
-- Que les paramètres de sortie sont valides.
-- Que les dépendances de conversion sont disponibles.
+## 16. Corrections prioritaires de la version 1.1.0
 
-Si un prérequis manque, la commande doit afficher précisément les éléments bloquants et les commandes à exécuter pour les résoudre.
+La version 1.1.0 présente un problème éditorial majeur : les briefs sont très détaillés, mais les chapitres générés après approbation sont trop vides.
 
-Elle ne doit ni supprimer le travail existant ni produire silencieusement un livrable incomplet présenté comme définitif.
+Les corrections suivantes sont prioritaires :
 
-Après assemblage, créer un répertoire de sortie organisé par langue et par format.
+1. Rendre les briefs synthétiques, sans les transformer en chapitres complets.
+2. Faire produire des chapitres réellement rédigés, avec des explications, des exemples et des développements.
+3. Garantir que tous les points du brief approuvé sont traités.
+4. Séparer clairement les énoncés d'exercices et leurs corrigés.
+5. Intégrer les illustrations, schémas et tableaux prévus avec leurs légendes.
+6. Ajouter des contrôles capables de détecter les chapitres vides ou insuffisamment développés.
+7. Empêcher l'assemblage d'un livre dont les chapitres sont de simples plans.
+8. Ajouter un processus explicite d'approbation des briefs.
+9. Compléter les scripts multiplateformes, les environnements virtuels et le tutoriel de bout en bout.
 
-Générer un manifeste recensant chaque fichier, son type, son chemin, sa date de création et son statut de validation.
+Vérifier que les commandes de génération d'un chapitre, d'une plage de chapitres et de tous les chapitres respectent ces règles.
 
-Créer également un rapport de production précisant :
+Les commandes de revue doivent vérifier le contenu réel et non uniquement la présence des titres attendus.
 
-- Les fichiers générés.
-- Les formats produits.
-- Les contrôles effectués.
-- Les contrôles réussis.
-- Les avertissements.
-- Les erreurs.
-- Les éléments restant à produire.
-- Les limites de conformité éventuelles.
+## 17. Règles de travail finales
 
-Prévoir une commande de contrôle permettant de vérifier que tous les livrables attendus sont réellement présents.
+- Ne te contente pas de proposer des extraits de code si la demande concerne les fichiers complets.
+- Ne supprime pas des fonctionnalités existantes sans justification.
+- Ne simplifie pas les exigences sans autorisation.
+- Ne remplace pas une véritable génération de contenu par des placeholders.
+- Ne considère pas un brief comme un chapitre.
+- Ne considère pas un chapitre comme terminé parce qu'il contient des titres.
+- Ne crée pas de faux résultats de tests.
+- Ne déclare pas une plateforme validée sans test correspondant.
+- Ne génère pas une archive avant d'avoir terminé les modifications et les vérifications demandées.
+- Signale explicitement les limites et les divergences restantes.
+- Privilégie la cohérence entre code, commandes OpenCode, scripts, documentation et résultats réellement générés.
 
-La documentation doit indiquer explicitement **la commande exacte à lancer après la rédaction pour assembler et construire le livrable complet**, puis la commande exacte de vérification finale.
-
-Ces commandes doivent exister dans le projet et être testées. Ne pas se contenter de les mentionner dans un README.
-
-## 17. Qualité, tests et cohérence
-
-Créer des tests automatisés couvrant les fonctions importantes.
-
-Vérifier notamment :
-
-- La création d'un nouveau projet.
-- Le questionnaire et l'enregistrement de la configuration.
-- La création de l'arborescence.
-- La création des briefs.
-- Le blocage de la rédaction si un brief n'est pas approuvé.
-- La modification des briefs.
-- La gestion des exercices.
-- La création d'une nouvelle langue.
-- L'absence de traduction automatique à la création d'une langue.
-- Les commandes de traduction.
-- La génération des chapitres.
-- La vérification du contenu.
-- L'assemblage.
-- La génération des formats.
-- La détection des fichiers manquants.
-- La gestion des erreurs.
-- La protection contre l'écrasement de fichiers.
-- Les scripts et les commandes réellement disponibles.
-
-Tester les fonctions de manière reproductible.
-
-Ne pas remplacer les tests par une simple inspection visuelle des fichiers.
-
-Ne pas déclarer un test réussi s'il n'a pas été exécuté.
-
-## 18. Documentation obligatoire
-
-Fournir une documentation complète, claire et compréhensible.
-
-Elle doit expliquer :
-
-- L'architecture du générateur.
-- L'installation des dépendances.
-- Le lancement sous chaque plateforme.
-- Le fonctionnement du questionnaire.
-- La configuration d'un livre.
-- L'utilisation des commandes OpenCode.
-- La création et l'approbation des briefs.
-- La rédaction et la révision des chapitres.
-- La création des langues.
-- La traduction.
-- La préparation des illustrations.
-- L'assemblage.
-- La génération des formats.
-- Le contrôle des livrables.
-- La reprise après interruption.
-- Le dépannage.
-- Les limitations connues.
-
-Inclure une table récapitulative des commandes réellement disponibles, avec leur fonction, leurs paramètres, leurs prérequis et un exemple d'utilisation.
-
-Chaque commande documentée doit correspondre à une implémentation existante.
-
-## 19. Livrables attendus du développement du générateur
-
-Le résultat de ce travail doit inclure :
-
-- Le code complet du générateur.
-- Les scripts `.sh`, `.bat` et `.ps1`.
-- Les commandes OpenCode.
-- Les agents et skills nécessaires.
-- Les modèles de fichiers.
-- Les scripts de validation et d'assemblage.
-- Les tests automatisés.
-- Les documentations.
-- Un exemple de configuration.
-- Une procédure de création d'un livre de démonstration.
-- Une procédure de construction du livrable final.
-- Un rapport des tests effectués.
-- Une archive ZIP complète du projet.
-- Une archive TAR.GZ si possible.
-- Une somme SHA-256 des archives.
-
-Les archives doivent contenir les fichiers réellement présents dans le projet. Ne pas créer de liens de téléchargement fictifs.
-
-## 20. Méthode de travail imposée
-
-Travaille par étapes cohérentes :
-
-1. Analyse de l'existant.
-2. Diagnostic des fonctionnalités manquantes.
-3. Proposition ou mise à jour de l'architecture.
-4. Implémentation des fonctionnalités.
-5. Création des commandes et scripts.
-6. Ajout des tests.
-7. Exécution des tests.
-8. Correction des erreurs.
-9. Génération d'un projet de démonstration.
-10. Vérification du workflow complet.
-11. Construction des archives.
-12. Rapport final.
-
-N'arrête pas le travail après avoir créé les fichiers de documentation ou les commandes Markdown.
-
-Vérifie que les scripts référencés existent et que leurs paramètres correspondent à la documentation.
-
-Lorsque c'est possible, réalise un test d'intégration allant de la configuration initiale jusqu'à l'assemblage d'un livrable.
-
-Si un test nécessite un modèle IA, un moteur d'images ou un outil externe indisponible, distingue clairement ce qui a été testé automatiquement de ce qui reste à tester.
-
-## 21. Critères d'acceptation finaux
-
-Le projet sera considéré comme terminé lorsque :
-
-- Le générateur crée un projet autonome pour un seul livre.
-- Le questionnaire permet de définir les paramètres éditoriaux et techniques.
-- Le workflow est reprenable.
-- Chaque chapitre doit disposer d'un brief détaillé approuvé avant sa rédaction.
-- Les briefs peuvent être modifiés et complétés.
-- Les exercices possèdent des énoncés, des consignes et des corrections planifiés.
-- Les commandes de traduction sont explicites.
-- L'ajout d'une langue ne déclenche pas de génération automatique.
-- Chaque langue possède ses propres espaces d'illustrations.
-- Le moteur d'images n'est pas démarré automatiquement.
-- Les commandes documentées correspondent aux commandes réellement disponibles.
-- Le livre peut être assemblé et exporté dans les formats demandés.
-- Les livrables sont contrôlés avant d'être déclarés terminés.
-- Les scripts multiplateformes sont présents.
-- Les tests exécutés et leurs résultats sont documentés.
-- Les archives finales sont créées et vérifiables.
-
-## 22. Consigne finale
-
-Commence par analyser les fichiers présents.
-
-Ensuite, implémente les fonctionnalités manquantes et corrige les incohérences.
-
-Ne me fournis pas seulement des exemples de code ou des instructions pour réaliser moi-même les modifications : effectue les modifications dans le projet lorsque l'environnement le permet.
-
-À la fin, donne-moi :
-
-1. Le résumé des modifications.
-2. Les commandes exactes pour créer un projet de livre.
-3. Les commandes exactes pour créer, modifier et approuver les briefs.
-4. Les commandes exactes pour rédiger et vérifier les chapitres.
-5. Les commandes exactes pour traduire le contenu.
-6. **La commande exacte pour assembler le livre complet après la rédaction.**
-7. La commande exacte pour générer les livrables finaux.
-8. La commande exacte pour vérifier ces livrables.
-9. Les résultats réels des tests.
-10. Les liens vers les archives créées et leurs sommes de contrôle.
-
-Ne suppose pas qu'une commande existe parce que son nom paraît logique. Vérifie sa présence, son implémentation et son fonctionnement avant de me la communiquer.
-
-Ne déclare pas le projet terminé si des fonctionnalités obligatoires sont absentes ou si le workflow de production final n'a pas été vérifié.
+**Objectif final : disposer d'un générateur OpenCode fiable, multiplateforme, configurable et documenté, capable de produire des livres réellement rédigés et exploitables pour la publication, depuis le questionnaire initial jusqu'aux fichiers finaux.**
